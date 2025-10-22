@@ -33,7 +33,7 @@ function uid() {
 const lightStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF7FB', // Pastel background
+    backgroundColor: '#FFF7FB',
   },
   header: {
     paddingHorizontal: 20,
@@ -48,12 +48,12 @@ const lightStyles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#6b2d6b', // Header text
+    color: '#6b2d6b',
     marginBottom: 8,
   },
   search: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Card background
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -62,9 +62,9 @@ const lightStyles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
-    color: '#4a2b4a', // Primary text
+    color: '#4a2b4a',
     borderWidth: 1,
-    borderColor: '#E0E0E0', // Border
+    borderColor: '#E0E0E0',
   },
   themeToggle: {
     marginLeft: 12,
@@ -74,7 +74,32 @@ const lightStyles = StyleSheet.create({
   themeLabel: {
     fontSize: 14,
     marginRight: 8,
-    color: '#5b3b5b', // Secondary text
+    color: '#5b3b5b',
+  },
+  tagsContainer: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  tagButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  tagButtonSelected: {
+    backgroundColor: '#FFD9E8',
+    borderColor: '#ff6fa3',
+  },
+  tagText: {
+    fontSize: 14,
+    color: '#4a2b4a',
+    fontWeight: '600',
+  },
+  tagTextSelected: {
+    color: '#6b2d6b',
   },
   listContainer: {
     paddingHorizontal: 16,
@@ -82,7 +107,7 @@ const lightStyles = StyleSheet.create({
     paddingTop: 10,
   },
   card: {
-    backgroundColor: '#FFFFFF', // Card background
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
@@ -96,8 +121,8 @@ const lightStyles = StyleSheet.create({
   },
   cardPinned: {
     borderWidth: 2,
-    borderColor: '#FFD9E8', // Pink
-    backgroundColor: '#E6FFF4', // Mint
+    borderColor: '#FFD9E8',
+    backgroundColor: '#E6FFF4',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -107,7 +132,7 @@ const lightStyles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#4a2b4a', // Primary text
+    color: '#4a2b4a',
     flex: 1,
     marginRight: 8,
   },
@@ -126,7 +151,24 @@ const lightStyles = StyleSheet.create({
   cardBody: {
     marginTop: 8,
     fontSize: 14,
-    color: '#5b3b5b', // Secondary text
+    color: '#5b3b5b',
+  },
+  cardTags: {
+    marginTop: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  cardTag: {
+    backgroundColor: '#F3E8FF',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  cardTagText: {
+    fontSize: 12,
+    color: '#6b2d6b',
   },
   cardFooter: {
     marginTop: 10,
@@ -134,7 +176,7 @@ const lightStyles = StyleSheet.create({
   },
   footerText: {
     fontSize: 11,
-    color: '#9b7b9b', // Tertiary text
+    color: '#9b7b9b',
   },
   empty: {
     alignItems: 'center',
@@ -145,14 +187,14 @@ const lightStyles = StyleSheet.create({
     marginBottom: 12,
   },
   emptyText: {
-    color: '#9b7b9b', // Tertiary text
+    color: '#9b7b9b',
     fontSize: 16,
   },
   fab: {
     position: 'absolute',
     right: 20,
     bottom: 34,
-    backgroundColor: '#ff6fa3', // Pink
+    backgroundColor: '#ff6fa3',
     width: 64,
     height: 64,
     borderRadius: 32,
@@ -170,7 +212,7 @@ const lightStyles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#FFF7FB', // Pastel background
+    backgroundColor: '#FFF7FB',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -182,16 +224,16 @@ const lightStyles = StyleSheet.create({
   },
   modalClose: {
     fontSize: 22,
-    color: '#6b2d6b', // Header text
+    color: '#6b2d6b',
   },
   modalTitle: {
     fontSize: 18,
-    color: '#6b2d6b', // Header text
+    color: '#6b2d6b',
     fontWeight: '700',
   },
   modalSave: {
     fontSize: 16,
-    color: '#ff6fa3', // Pink
+    color: '#ff6fa3',
     fontWeight: '700',
   },
   modalBody: {
@@ -199,7 +241,7 @@ const lightStyles = StyleSheet.create({
     paddingTop: 8,
   },
   inputTitle: {
-    backgroundColor: '#FFFFFF', // Card background
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -209,12 +251,12 @@ const lightStyles = StyleSheet.create({
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 2,
-    color: '#4a2b4a', // Primary text
+    color: '#4a2b4a',
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
   inputBody: {
-    backgroundColor: '#FFFFFF', // Card background
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 14,
@@ -225,9 +267,25 @@ const lightStyles = StyleSheet.create({
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 2,
-    color: '#4a2b4a', // Primary text
+    color: '#4a2b4a',
     borderWidth: 1,
     borderColor: '#E0E0E0',
+  },
+  inputTags: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    marginBottom: 12,
+    shadowColor: '#6b2d6b',
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
+    color: '#4a2b4a',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    minHeight: 40, // Ensure enough space for input
   },
   pinRow: {
     marginTop: 12,
@@ -236,7 +294,7 @@ const lightStyles = StyleSheet.create({
   pinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF', // Card background
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 10,
@@ -253,7 +311,7 @@ const lightStyles = StyleSheet.create({
   },
   pinText: {
     fontSize: 14,
-    color: '#6b2d6b', // Header text
+    color: '#6b2d6b',
     fontWeight: '600',
   },
 });
@@ -262,7 +320,7 @@ const lightStyles = StyleSheet.create({
 const darkStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A', // Dark background
+    backgroundColor: '#1A1A1A',
   },
   header: {
     paddingHorizontal: 20,
@@ -277,12 +335,12 @@ const darkStyles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#F5F5F5', // Header text
+    color: '#F5F5F5',
     marginBottom: 8,
   },
   search: {
     flex: 1,
-    backgroundColor: '#333333', // Input background
+    backgroundColor: '#333333',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -291,9 +349,9 @@ const darkStyles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
-    color: '#E0E0E0', // Primary text
+    color: '#E0E0E0',
     borderWidth: 1,
-    borderColor: '#4A4A4A', // Border
+    borderColor: '#4A4A4A',
   },
   themeToggle: {
     marginLeft: 12,
@@ -303,7 +361,32 @@ const darkStyles = StyleSheet.create({
   themeLabel: {
     fontSize: 14,
     marginRight: 8,
-    color: '#B0B0B0', // Secondary text
+    color: '#B0B0B0',
+  },
+  tagsContainer: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  tagButton: {
+    backgroundColor: '#333333',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#4A4A4A',
+  },
+  tagButtonSelected: {
+    backgroundColor: '#F06292',
+    borderColor: '#F06292',
+  },
+  tagText: {
+    fontSize: 14,
+    color: '#E0E0E0',
+    fontWeight: '600',
+  },
+  tagTextSelected: {
+    color: '#FFFFFF',
   },
   listContainer: {
     paddingHorizontal: 16,
@@ -311,7 +394,7 @@ const darkStyles = StyleSheet.create({
     paddingTop: 10,
   },
   card: {
-    backgroundColor: '#2E2E2E', // Card background
+    backgroundColor: '#2E2E2E',
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
@@ -325,8 +408,8 @@ const darkStyles = StyleSheet.create({
   },
   cardPinned: {
     borderWidth: 2,
-    borderColor: '#F06292', // Pink
-    backgroundColor: '#26A69A', // Mint
+    borderColor: '#F06292',
+    backgroundColor: '#26A69A',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -336,7 +419,7 @@ const darkStyles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#E0E0E0', // Primary text
+    color: '#E0E0E0',
     flex: 1,
     marginRight: 8,
   },
@@ -355,7 +438,24 @@ const darkStyles = StyleSheet.create({
   cardBody: {
     marginTop: 8,
     fontSize: 14,
-    color: '#B0B0B0', // Secondary text
+    color: '#B0B0B0',
+  },
+  cardTags: {
+    marginTop: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  cardTag: {
+    backgroundColor: '#9575CD',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  cardTagText: {
+    fontSize: 12,
+    color: '#FFFFFF',
   },
   cardFooter: {
     marginTop: 10,
@@ -363,7 +463,7 @@ const darkStyles = StyleSheet.create({
   },
   footerText: {
     fontSize: 11,
-    color: '#757575', // Tertiary text
+    color: '#757575',
   },
   empty: {
     alignItems: 'center',
@@ -374,14 +474,14 @@ const darkStyles = StyleSheet.create({
     marginBottom: 12,
   },
   emptyText: {
-    color: '#757575', // Tertiary text
+    color: '#757575',
     fontSize: 16,
   },
   fab: {
     position: 'absolute',
     right: 20,
     bottom: 34,
-    backgroundColor: '#F06292', // Pink
+    backgroundColor: '#F06292',
     width: 64,
     height: 64,
     borderRadius: 32,
@@ -399,7 +499,7 @@ const darkStyles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#1A1A1A', // Dark background
+    backgroundColor: '#1A1A1A',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -411,16 +511,16 @@ const darkStyles = StyleSheet.create({
   },
   modalClose: {
     fontSize: 22,
-    color: '#F5F5F5', // Header text
+    color: '#F5F5F5',
   },
   modalTitle: {
     fontSize: 18,
-    color: '#F5F5F5', // Header text
+    color: '#F5F5F5',
     fontWeight: '700',
   },
   modalSave: {
     fontSize: 16,
-    color: '#F06292', // Pink
+    color: '#F06292',
     fontWeight: '700',
   },
   modalBody: {
@@ -428,7 +528,7 @@ const darkStyles = StyleSheet.create({
     paddingTop: 8,
   },
   inputTitle: {
-    backgroundColor: '#333333', // Input background
+    backgroundColor: '#333333',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -438,12 +538,12 @@ const darkStyles = StyleSheet.create({
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 2,
-    color: '#E0E0E0', // Primary text
+    color: '#E0E0E0',
     borderWidth: 1,
     borderColor: '#4A4A4A',
   },
   inputBody: {
-    backgroundColor: '#333333', // Input background
+    backgroundColor: '#333333',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 14,
@@ -454,9 +554,25 @@ const darkStyles = StyleSheet.create({
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 2,
-    color: '#E0E0E0', // Primary text
+    color: '#E0E0E0',
     borderWidth: 1,
     borderColor: '#4A4A4A',
+  },
+  inputTags: {
+    backgroundColor: '#333333',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
+    color: '#E0E0E0',
+    borderWidth: 1,
+    borderColor: '#4A4A4A',
+    minHeight: 40,
   },
   pinRow: {
     marginTop: 12,
@@ -465,7 +581,7 @@ const darkStyles = StyleSheet.create({
   pinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#333333', // Input background
+    backgroundColor: '#333333',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 10,
@@ -482,7 +598,7 @@ const darkStyles = StyleSheet.create({
   },
   pinText: {
     fontSize: 14,
-    color: '#F5F5F5', // Header text
+    color: '#F5F5F5',
     fontWeight: '600',
   },
 });
@@ -490,6 +606,7 @@ const darkStyles = StyleSheet.create({
 export default function App() {
   const [notes, setNotes] = useState([]);
   const [query, setQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState('All');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
   const [theme, setTheme] = useState('light');
@@ -562,13 +679,13 @@ export default function App() {
   };
 
   const openNewNote = () => {
-    setEditingNote({ id: null, title: '', body: '', pinned: false });
+    setEditingNote({ id: null, title: '', body: '', tags: [], tagsInput: '', pinned: false });
     setModalVisible(true);
     setTimeout(() => titleRef.current && titleRef.current.focus(), 300);
   };
 
   const openEditNote = (note) => {
-    setEditingNote({ ...note });
+    setEditingNote({ ...note, tags: note.tags || [], tagsInput: (note.tags || []).join(', ') });
     setModalVisible(true);
     setTimeout(() => titleRef.current && titleRef.current.focus(), 300);
   };
@@ -581,17 +698,29 @@ export default function App() {
       return;
     }
 
+    const tags = (editingNote.tagsInput || '')
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
+
+    console.log('Saving note with tags:', tags);
+
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
     if (editingNote.id) {
       setNotes((prev) =>
-        prev.map((n) => (n.id === editingNote.id ? { ...n, title: t, body: b, updatedAt: Date.now() } : n))
+        prev.map((n) =>
+          n.id === editingNote.id
+            ? { ...n, title: t, body: b, tags, updatedAt: Date.now() }
+            : n
+        )
       );
     } else {
       const newNote = {
         id: uid(),
         title: t,
         body: b,
+        tags,
         pinned: false,
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -637,11 +766,37 @@ export default function App() {
     });
   };
 
+  // Get unique tags from notes
+  const getTags = () => {
+    const allTags = notes.reduce((acc, note) => {
+      if (note.tags && note.tags.length > 0) {
+        note.tags.forEach((tag) => {
+          if (!acc.includes(tag)) {
+            acc.push(tag);
+          }
+        });
+      }
+      return acc;
+    }, []);
+    return ['All', ...allTags.sort()];
+  };
+
+  const tags = getTags();
+
   const filtered = notes
     .filter((n) => {
+      // Apply tag filter
+      if (selectedTag !== 'All' && (!n.tags || !n.tags.includes(selectedTag))) {
+        return false;
+      }
+      // Apply search query filter
       if (!query) return true;
       const q = query.toLowerCase();
-      return (n.title || '').toLowerCase().includes(q) || (n.body || '').toLowerCase().includes(q);
+      return (
+        (n.title || '').toLowerCase().includes(q) ||
+        (n.body || '').toLowerCase().includes(q) ||
+        (n.tags || []).some((tag) => tag.toLowerCase().includes(q))
+      );
     })
     .sort((a, b) => {
       if (a.pinned && !b.pinned) return -1;
@@ -679,12 +834,32 @@ export default function App() {
         <Text style={styles.cardBody} numberOfLines={3}>
           {item.body || 'No content yet. Tap to edit.'}
         </Text>
+        {item.tags && item.tags.length > 0 && (
+          <View style={styles.cardTags}>
+            {item.tags.map((tag, index) => (
+              <View key={index} style={styles.cardTag}>
+                <Text style={styles.cardTagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )}
         <View style={styles.cardFooter}>
           <Text style={styles.footerText}>
             {new Date(item.updatedAt || item.createdAt).toLocaleString()}
           </Text>
         </View>
       </View>
+    </TouchableOpacity>
+  );
+
+  const renderTag = ({ item }) => (
+    <TouchableOpacity
+      style={[styles.tagButton, selectedTag === item ? styles.tagButtonSelected : null]}
+      onPress={() => setSelectedTag(item)}
+    >
+      <Text style={[styles.tagText, selectedTag === item ? styles.tagTextSelected : null]}>
+        {item}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -715,6 +890,15 @@ export default function App() {
             />
           </View>
         </View>
+        <FlatList
+          data={tags}
+          renderItem={renderTag}
+          keyExtractor={(item) => item}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tagsContainer}
+          ListEmptyComponent={<Text style={styles.tagText}>No tags yet</Text>}
+        />
       </View>
 
       <FlatList
@@ -763,6 +947,18 @@ export default function App() {
               value={editingNote ? editingNote.body : ''}
               onChangeText={(t) => setEditingNote((s) => ({ ...s, body: t }))}
               multiline
+              returnKeyType="next"
+            />
+            <TextInput
+              placeholder="Tags (comma-separated, e.g., work, personal)"
+              placeholderTextColor={placeholderColor}
+              style={styles.inputTags}
+              value={editingNote ? editingNote.tagsInput : ''}
+              onChangeText={(t) => {
+                console.log('Tags input changed:', t);
+                setEditingNote((s) => ({ ...s, tagsInput: t }));
+              }}
+              returnKeyType="done"
             />
             <View style={styles.pinRow}>
               <TouchableOpacity
