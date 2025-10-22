@@ -29,7 +29,7 @@ function uid() {
   return Date.now().toString() + Math.random().toString(36).slice(2, 9);
 }
 
-// Light theme styles
+// Light theme styles (unchanged)
 const lightStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -285,7 +285,7 @@ const lightStyles = StyleSheet.create({
     color: '#4a2b4a',
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    minHeight: 40, // Ensure enough space for input
+    minHeight: 40,
   },
   pinRow: {
     marginTop: 12,
@@ -316,7 +316,7 @@ const lightStyles = StyleSheet.create({
   },
 });
 
-// Dark theme styles
+// Dark theme styles (unchanged)
 const darkStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -638,7 +638,12 @@ export default function App() {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
-        setNotes(JSON.parse(raw));
+        // Ensure tags are uppercase when loading from storage
+        const loadedNotes = JSON.parse(raw).map((note) => ({
+          ...note,
+          tags: note.tags ? note.tags.map((tag) => tag.toUpperCase()) : [],
+        }));
+        setNotes(loadedNotes);
       }
     } catch (e) {
       console.warn('Failed loading notes', e);
@@ -685,7 +690,11 @@ export default function App() {
   };
 
   const openEditNote = (note) => {
-    setEditingNote({ ...note, tags: note.tags || [], tagsInput: (note.tags || []).join(', ') });
+    setEditingNote({
+      ...note,
+      tags: note.tags || [],
+      tagsInput: (note.tags || []).join(', '),
+    });
     setModalVisible(true);
     setTimeout(() => titleRef.current && titleRef.current.focus(), 300);
   };
@@ -698,9 +707,10 @@ export default function App() {
       return;
     }
 
+    // Convert tags to uppercase
     const tags = (editingNote.tagsInput || '')
       .split(',')
-      .map((tag) => tag.trim())
+      .map((tag) => tag.trim().toUpperCase())
       .filter((tag) => tag.length > 0);
 
     console.log('Saving note with tags:', tags);
@@ -766,19 +776,20 @@ export default function App() {
     });
   };
 
-  // Get unique tags from notes
+  // Get unique tags from notes, ensuring uppercase
   const getTags = () => {
     const allTags = notes.reduce((acc, note) => {
       if (note.tags && note.tags.length > 0) {
         note.tags.forEach((tag) => {
-          if (!acc.includes(tag)) {
-            acc.push(tag);
+          const upperTag = tag.toUpperCase();
+          if (!acc.includes(upperTag)) {
+            acc.push(upperTag);
           }
         });
       }
       return acc;
     }, []);
-    return ['All', ...allTags.sort()];
+    return ['ALL', ...allTags.sort()];
   };
 
   const tags = getTags();
@@ -786,7 +797,7 @@ export default function App() {
   const filtered = notes
     .filter((n) => {
       // Apply tag filter
-      if (selectedTag !== 'All' && (!n.tags || !n.tags.includes(selectedTag))) {
+      if (selectedTag !== 'ALL' && (!n.tags || !n.tags.includes(selectedTag))) {
         return false;
       }
       // Apply search query filter
@@ -950,7 +961,7 @@ export default function App() {
               returnKeyType="next"
             />
             <TextInput
-              placeholder="Tags (comma-separated, e.g., work, personal)"
+              placeholder="Tags (comma-separated, e.g., WORK, PERSONAL)"
               placeholderTextColor={placeholderColor}
               style={styles.inputTags}
               value={editingNote ? editingNote.tagsInput : ''}
