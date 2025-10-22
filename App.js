@@ -29,6 +29,18 @@ function uid() {
   return Date.now().toString() + Math.random().toString(36).slice(2, 9);
 }
 
+// Function to get greeting based on time of day
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 0 && hour < 12) {
+    return 'Good Morning';
+  } else if (hour >= 12 && hour < 17) {
+    return 'Good Afternoon';
+  } else {
+    return 'Good Evening';
+  }
+};
+
 // Light theme styles (unchanged)
 const lightStyles = StyleSheet.create({
   container: {
@@ -606,7 +618,7 @@ const darkStyles = StyleSheet.create({
 export default function App() {
   const [notes, setNotes] = useState([]);
   const [query, setQuery] = useState('');
-  const [selectedTag, setSelectedTag] = useState('All');
+  const [selectedTag, setSelectedTag] = useState('ALL');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
   const [theme, setTheme] = useState('light');
@@ -882,7 +894,7 @@ export default function App() {
         translucent
       />
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>🌸 Cute Notepad</Text>
+        <Text style={styles.headerTitle}>🌸 {getGreeting()}</Text>
         <View style={styles.headerRow}>
           <TextInput
             placeholder="Search notes..."
