@@ -14,8 +14,10 @@ import {
   LayoutAnimation,
   Alert,
   Switch,
+  Share,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Added import for icons
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -788,6 +790,21 @@ export default function App() {
     });
   };
 
+  // Function to share a note
+  const shareNote = async (note) => {
+    try {
+      const title = note.title || 'Untitled';
+      const body = note.body || 'No content';
+      const message = `${title}\n\n${body}`;
+      await Share.share({
+        message,
+      });
+    } catch (error) {
+      console.warn('Error sharing note:', error);
+      Alert.alert('Error', 'Failed to share the note. Please try again.');
+    }
+  };
+
   // Get unique tags from notes, ensuring uppercase
   const getTags = () => {
     const allTags = notes.reduce((acc, note) => {
@@ -841,6 +858,20 @@ export default function App() {
               testID={`pin-button-${item.id}`}
             >
               <Text style={styles.actionEmoji}>{item.pinned ? '📌' : '📍'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                shareNote(item);
+              }}
+              style={styles.actionBtn}
+              testID={`share-button-${item.id}`}
+            >
+              <MaterialIcons
+                name="share"
+                size={18}
+                color={theme === 'light' ? '#4a2b4a' : '#E0E0E0'}
+              />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={(e) => {
