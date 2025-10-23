@@ -17,7 +17,7 @@ import {
   Share,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Added import for icons
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -328,9 +328,68 @@ const lightStyles = StyleSheet.create({
     color: '#6b2d6b',
     fontWeight: '600',
   },
+  // New styles for to-do list
+  typeToggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  typeButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  typeButtonSelected: {
+    backgroundColor: '#FFD9E8',
+    borderColor: '#ff6fa3',
+  },
+  typeButtonText: {
+    fontSize: 14,
+    color: '#4a2b4a',
+    fontWeight: '600',
+  },
+  typeButtonTextSelected: {
+    color: '#6b2d6b',
+  },
+  checklistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  checklistInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#4a2b4a',
+    paddingVertical: 0,
+  },
+  checklistAddButton: {
+    padding: 10,
+    backgroundColor: '#ff6fa3',
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  checklistAddText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  checklistCheckbox: {
+    marginRight: 10,
+  },
 });
 
-// Dark theme styles (unchanged)
+// Dark theme styles (unchanged except for new to-do list styles)
 const darkStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -615,6 +674,65 @@ const darkStyles = StyleSheet.create({
     color: '#F5F5F5',
     fontWeight: '600',
   },
+  // New styles for to-do list
+  typeToggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  typeButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#333333',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: '#4A4A4A',
+  },
+  typeButtonSelected: {
+    backgroundColor: '#F06292',
+    borderColor: '#F06292',
+  },
+  typeButtonText: {
+    fontSize: 14,
+    color: '#E0E0E0',
+    fontWeight: '600',
+  },
+  typeButtonTextSelected: {
+    color: '#FFFFFF',
+  },
+  checklistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    backgroundColor: '#333333',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#4A4A4A',
+  },
+  checklistInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#E0E0E0',
+    paddingVertical: 0,
+  },
+  checklistAddButton: {
+    padding: 10,
+    backgroundColor: '#F06292',
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  checklistAddText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  checklistCheckbox: {
+    marginRight: 10,
+  },
 });
 
 export default function App() {
@@ -652,10 +770,12 @@ export default function App() {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
-        // Ensure tags are uppercase when loading from storage
+        // Ensure tags are uppercase and handle new fields
         const loadedNotes = JSON.parse(raw).map((note) => ({
           ...note,
+          type: note.type || 'text', // Default to text for existing notes
           tags: note.tags ? note.tags.map((tag) => tag.toUpperCase()) : [],
+          checklist: note.checklist || [], // Default to empty array
         }));
         setNotes(loadedNotes);
       }
@@ -698,7 +818,17 @@ export default function App() {
   };
 
   const openNewNote = () => {
-    setEditingNote({ id: null, title: '', body: '', tags: [], tagsInput: '', pinned: false });
+    setEditingNote({
+      id: null,
+      title: '',
+      body: '',
+      tags: [],
+      tagsInput: '',
+      pinned: false,
+      type: 'text',
+      checklist: [],
+      newChecklistItem: '', // For adding new checklist items
+    });
     setModalVisible(true);
     setTimeout(() => titleRef.current && titleRef.current.focus(), 300);
   };
@@ -708,6 +838,9 @@ export default function App() {
       ...note,
       tags: note.tags || [],
       tagsInput: (note.tags || []).join(', '),
+      type: note.type || 'text',
+      checklist: note.checklist || [],
+      newChecklistItem: '',
     });
     setModalVisible(true);
     setTimeout(() => titleRef.current && titleRef.current.focus(), 300);
@@ -716,7 +849,9 @@ export default function App() {
   const saveEditing = () => {
     const t = (editingNote.title || '').trim();
     const b = (editingNote.body || '').trim();
-    if (!t && !b) {
+    const checklist = editingNote.checklist || [];
+    // Validate: at least title, body (for text notes), or checklist items (for to-do notes)
+    if (!t && !b && checklist.length === 0) {
       setModalVisible(false);
       return;
     }
@@ -735,7 +870,7 @@ export default function App() {
       setNotes((prev) =>
         prev.map((n) =>
           n.id === editingNote.id
-            ? { ...n, title: t, body: b, tags, updatedAt: Date.now() }
+            ? { ...n, title: t, body: b, tags, checklist, updatedAt: Date.now() }
             : n
         )
       );
@@ -745,9 +880,11 @@ export default function App() {
         title: t,
         body: b,
         tags,
-        pinned: false,
+        pinned: editingNote.pinned || false,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        type: editingNote.type || 'text',
+        checklist,
       };
       setNotes((prev) => [newNote, ...prev]);
     }
@@ -794,8 +931,14 @@ export default function App() {
   const shareNote = async (note) => {
     try {
       const title = note.title || 'Untitled';
-      const body = note.body || 'No content';
-      const message = `${title}\n\n${body}`;
+      let message = title + '\n\n';
+      if (note.type === 'todo' && note.checklist && note.checklist.length > 0) {
+        message += note.checklist
+          .map((item) => `${item.completed ? '[x]' : '[ ]'} ${item.text}`)
+          .join('\n');
+      } else {
+        message += note.body || 'No content';
+      }
       await Share.share({
         message,
       });
@@ -821,6 +964,42 @@ export default function App() {
     return ['ALL', ...allTags.sort()];
   };
 
+  // To-do list functions
+  const addChecklistItem = () => {
+    const text = (editingNote.newChecklistItem || '').trim();
+    if (!text) return;
+    setEditingNote((prev) => ({
+      ...prev,
+      checklist: [...(prev.checklist || []), { id: uid(), text, completed: false }],
+      newChecklistItem: '',
+    }));
+  };
+
+  const updateChecklistItem = (id, text) => {
+    setEditingNote((prev) => ({
+      ...prev,
+      checklist: prev.checklist.map((item) =>
+        item.id === id ? { ...item, text } : item
+      ),
+    }));
+  };
+
+  const toggleChecklistItem = (id) => {
+    setEditingNote((prev) => ({
+      ...prev,
+      checklist: prev.checklist.map((item) =>
+        item.id === id ? { ...item, completed: !item.completed } : item
+      ),
+    }));
+  };
+
+  const deleteChecklistItem = (id) => {
+    setEditingNote((prev) => ({
+      ...prev,
+      checklist: prev.checklist.filter((item) => item.id !== id),
+    }));
+  };
+
   const tags = getTags();
 
   const filtered = notes
@@ -832,6 +1011,13 @@ export default function App() {
       // Apply search query filter
       if (!query) return true;
       const q = query.toLowerCase();
+      if (n.type === 'todo' && n.checklist && n.checklist.length > 0) {
+        return (
+          (n.title || '').toLowerCase().includes(q) ||
+          n.checklist.some((item) => item.text.toLowerCase().includes(q)) ||
+          (n.tags || []).some((tag) => tag.toLowerCase().includes(q))
+        );
+      }
       return (
         (n.title || '').toLowerCase().includes(q) ||
         (n.body || '').toLowerCase().includes(q) ||
@@ -885,9 +1071,28 @@ export default function App() {
             </TouchableOpacity>
           </View>
         </View>
-        <Text style={styles.cardBody} numberOfLines={3}>
-          {item.body || 'No content yet. Tap to edit.'}
-        </Text>
+        {item.type === 'todo' && item.checklist && item.checklist.length > 0 ? (
+          <View style={{ marginTop: 8 }}>
+            {item.checklist.slice(0, 3).map((todo, index) => (
+              <View key={index} style={styles.checklistItem}>
+                <Text style={styles.checklistCheckbox}>{todo.completed ? '✅' : '⬜'}</Text>
+                <Text
+                  style={[styles.cardBody, todo.completed && { textDecorationLine: 'line-through' }]}
+                  numberOfLines={1}
+                >
+                  {todo.text}
+                </Text>
+              </View>
+            ))}
+            {item.checklist.length > 3 && (
+              <Text style={styles.cardBody}>...and {item.checklist.length - 3} more</Text>
+            )}
+          </View>
+        ) : (
+          <Text style={styles.cardBody} numberOfLines={3}>
+            {item.body || 'No content yet. Tap to edit.'}
+          </Text>
+        )}
         {item.tags && item.tags.length > 0 && (
           <View style={styles.cardTags}>
             {item.tags.map((tag, index) => (
@@ -915,6 +1120,30 @@ export default function App() {
         {item}
       </Text>
     </TouchableOpacity>
+  );
+
+  const renderChecklistItem = ({ item, index }) => (
+    <View style={styles.checklistItem}>
+      <TouchableOpacity
+        onPress={() => toggleChecklistItem(item.id)}
+        style={styles.checklistCheckbox}
+      >
+        <Text>{item.completed ? '✅' : '⬜'}</Text>
+      </TouchableOpacity>
+      <TextInput
+        style={styles.checklistInput}
+        value={item.text}
+        onChangeText={(text) => updateChecklistItem(item.id, text)}
+        placeholder="Enter task..."
+        placeholderTextColor={placeholderColor}
+      />
+      <TouchableOpacity
+        onPress={() => deleteChecklistItem(item.id)}
+        style={{ padding: 5 }}
+      >
+        <Text style={styles.actionEmoji}>🗑️</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -994,15 +1223,74 @@ export default function App() {
               onChangeText={(t) => setEditingNote((s) => ({ ...s, title: t }))}
               returnKeyType="next"
             />
-            <TextInput
-              placeholder="Write something cute..."
-              placeholderTextColor={placeholderColor}
-              style={styles.inputBody}
-              value={editingNote ? editingNote.body : ''}
-              onChangeText={(t) => setEditingNote((s) => ({ ...s, body: t }))}
-              multiline
-              returnKeyType="next"
-            />
+            <View style={styles.typeToggleContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.typeButton,
+                  editingNote && editingNote.type === 'text' ? styles.typeButtonSelected : null,
+                ]}
+                onPress={() => setEditingNote((s) => ({ ...s, type: 'text', checklist: [] }))}
+              >
+                <Text
+                  style={[
+                    styles.typeButtonText,
+                    editingNote && editingNote.type === 'text' ? styles.typeButtonTextSelected : null,
+                  ]}
+                >
+                  Text Note
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.typeButton,
+                  editingNote && editingNote.type === 'todo' ? styles.typeButtonSelected : null,
+                ]}
+                onPress={() => setEditingNote((s) => ({ ...s, type: 'todo', body: '' }))}
+              >
+                <Text
+                  style={[
+                    styles.typeButtonText,
+                    editingNote && editingNote.type === 'todo' ? styles.typeButtonTextSelected : null,
+                  ]}
+                >
+                  To-Do List
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {editingNote && editingNote.type === 'todo' ? (
+              <>
+                <FlatList
+                  data={editingNote.checklist}
+                  renderItem={renderChecklistItem}
+                  keyExtractor={(item) => item.id}
+                  style={{ maxHeight: 200 }}
+                />
+                <View style={styles.checklistItem}>
+                  <TextInput
+                    style={styles.checklistInput}
+                    value={editingNote.newChecklistItem || ''}
+                    onChangeText={(t) => setEditingNote((s) => ({ ...s, newChecklistItem: t }))}
+                    placeholder="Add new task..."
+                    placeholderTextColor={placeholderColor}
+                    onSubmitEditing={addChecklistItem}
+                    returnKeyType="done"
+                  />
+                </View>
+                <TouchableOpacity style={styles.checklistAddButton} onPress={addChecklistItem}>
+                  <Text style={styles.checklistAddText}>Add Task</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TextInput
+                placeholder="Write something cute..."
+                placeholderTextColor={placeholderColor}
+                style={styles.inputBody}
+                value={editingNote ? editingNote.body : ''}
+                onChangeText={(t) => setEditingNote((s) => ({ ...s, body: t }))}
+                multiline
+                returnKeyType="next"
+              />
+            )}
             <TextInput
               placeholder="Tags (comma-separated, e.g., WORK, PERSONAL)"
               placeholderTextColor={placeholderColor}
