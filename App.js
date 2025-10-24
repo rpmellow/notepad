@@ -16,6 +16,7 @@ import {
   Switch,
   Share,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as Notifications from 'expo-notifications';
@@ -27,7 +28,8 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 const STORAGE_KEY = '@cute_notepad_notes_v1';
-const THEME_STORAGE_KEY = '@cute_notepad_theme_v1';
+const MODE_STORAGE_KEY = '@cute_notepad_mode_v1';
+const PALETTE_STORAGE_KEY = '@cute_notepad_palette_v1';
 
 // Notification setup
 async function setupNotifications() {
@@ -102,95 +104,372 @@ const getGreeting = () => {
   }
 };
 
-// Light theme styles
-const lightStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF7FB' },
+const colors = {
+  'default-light': {
+    primaryBg: '#FFF7FB',
+    secondaryBg: '#FFFFFF',
+    primaryText: '#4a2b4a',
+    secondaryText: '#5b3b5b',
+    tertiaryText: '#9b7b9b',
+    headerText: '#6b2d6b',
+    accent: '#ff6fa3',
+    accentLight: '#FFD9E8',
+    shadow: '#6b2d6b',
+    border: '#E0E0E0',
+    tagBg: '#F3E8FF',
+    pinnedBg: '#E6FFF4',
+    pinnedBorder: '#FFD9E8',
+    fabShadow: '#ff6fa3',
+    modalClose: '#6b2d6b',
+    cardTagText: '#6b2d6b',
+    switchFalse: '#9e9e9e',
+    switchTrue: '#FFD9E8',
+    thumb: '#ff6fa3',
+    icon: '#6b2d6b',
+    placeholder: '#9e9e9e',
+  },
+  'default-dark': {
+    primaryBg: '#1A1A1A',
+    secondaryBg: '#333333',
+    primaryText: '#E0E0E0',
+    secondaryText: '#B0B0B0',
+    tertiaryText: '#757575',
+    headerText: '#F5F5F5',
+    accent: '#F06292',
+    accentLight: '#F06292',
+    shadow: '#000000',
+    border: '#4A4A4A',
+    tagBg: '#9575CD',
+    pinnedBg: '#26A69A',
+    pinnedBorder: '#F06292',
+    fabShadow: '#F06292',
+    modalClose: '#F5F5F5',
+    cardTagText: '#FFFFFF',
+    switchFalse: '#757575',
+    switchTrue: '#F06292',
+    thumb: '#F06292',
+    icon: '#F5F5F5',
+    placeholder: '#757575',
+  },
+  'blue-light': {
+    primaryBg: '#FAFDFF',
+    secondaryBg: '#FFFFFF',
+    primaryText: '#01579B',
+    secondaryText: '#039BE5',
+    tertiaryText: '#64B5F6',
+    headerText: '#0288D1',
+    accent: '#03A9F4',
+    accentLight: '#81D4FA',
+    shadow: '#0288D1',
+    border: '#BBDEFB',
+    tagBg: '#E1F5FE',
+    pinnedBg: '#E1F5FE',
+    pinnedBorder: '#81D4FA',
+    fabShadow: '#03A9F4',
+    modalClose: '#0288D1',
+    cardTagText: '#0288D1',
+    switchFalse: '#9e9e9e',
+    switchTrue: '#81D4FA',
+    thumb: '#03A9F4',
+    icon: '#0288D1',
+    placeholder: '#64B5F6',
+  },
+  'blue-dark': {
+    primaryBg: '#0A192F',
+    secondaryBg: '#1E293B',
+    primaryText: '#BBDEFB',
+    secondaryText: '#90CAF9',
+    tertiaryText: '#64B5F6',
+    headerText: '#E3F2FD',
+    accent: '#3B82F6',
+    accentLight: '#3B82F6',
+    shadow: '#000000',
+    border: '#475569',
+    tagBg: '#1E88E5',
+    pinnedBg: '#1976D2',
+    pinnedBorder: '#3B82F6',
+    fabShadow: '#3B82F6',
+    modalClose: '#E3F2FD',
+    cardTagText: '#FFFFFF',
+    switchFalse: '#475569',
+    switchTrue: '#3B82F6',
+    thumb: '#3B82F6',
+    icon: '#E3F2FD',
+    placeholder: '#90CAF9',
+  },
+  'green-light': {
+    primaryBg: '#F6FFED',
+    secondaryBg: '#FFFFFF',
+    primaryText: '#33691E',
+    secondaryText: '#689F38',
+    tertiaryText: '#AED581',
+    headerText: '#388E3C',
+    accent: '#66BB6A',
+    accentLight: '#A5D6A7',
+    shadow: '#388E3C',
+    border: '#C5E1A5',
+    tagBg: '#DCEDC8',
+    pinnedBg: '#DCEDC8',
+    pinnedBorder: '#A5D6A7',
+    fabShadow: '#66BB6A',
+    modalClose: '#388E3C',
+    cardTagText: '#388E3C',
+    switchFalse: '#9e9e9e',
+    switchTrue: '#A5D6A7',
+    thumb: '#66BB6A',
+    icon: '#388E3C',
+    placeholder: '#AED581',
+  },
+  'green-dark': {
+    primaryBg: '#102027',
+    secondaryBg: '#1C3D35',
+    primaryText: '#C8E6C9',
+    secondaryText: '#A5D6A7',
+    tertiaryText: '#81C784',
+    headerText: '#E8F5E9',
+    accent: '#4CAF50',
+    accentLight: '#4CAF50',
+    shadow: '#000000',
+    border: '#388E3C',
+    tagBg: '#2E7D32',
+    pinnedBg: '#1B5E20',
+    pinnedBorder: '#4CAF50',
+    fabShadow: '#4CAF50',
+    modalClose: '#E8F5E9',
+    cardTagText: '#FFFFFF',
+    switchFalse: '#388E3C',
+    switchTrue: '#4CAF50',
+    thumb: '#4CAF50',
+    icon: '#E8F5E9',
+    placeholder: '#81C784',
+  },
+  'yellow-light': {
+    primaryBg: '#FFFDE7',
+    secondaryBg: '#FFFFFF',
+    primaryText: '#F57F17',
+    secondaryText: '#F9A825',
+    tertiaryText: '#FFEE58',
+    headerText: '#F57F17',
+    accent: '#FFEE58',
+    accentLight: '#FFF59D',
+    shadow: '#F9A825',
+    border: '#FFE082',
+    tagBg: '#FFF9C4',
+    pinnedBg: '#FFF9C4',
+    pinnedBorder: '#FFF59D',
+    fabShadow: '#FFEE58',
+    modalClose: '#F57F17',
+    cardTagText: '#F57F17',
+    switchFalse: '#9e9e9e',
+    switchTrue: '#FFF59D',
+    thumb: '#FFEE58',
+    icon: '#F57F17',
+    placeholder: '#FFEE58',
+  },
+  'yellow-dark': {
+    primaryBg: '#1F1A00',
+    secondaryBg: '#3B3500',
+    primaryText: '#FFF59D',
+    secondaryText: '#FFF176',
+    tertiaryText: '#FFEE58',
+    headerText: '#FFFDE7',
+    accent: '#FFEB3B',
+    accentLight: '#FFEB3B',
+    shadow: '#000000',
+    border: '#F9A825',
+    tagBg: '#FBC02D',
+    pinnedBg: '#F57F17',
+    pinnedBorder: '#FFEB3B',
+    fabShadow: '#FFEB3B',
+    modalClose: '#FFFDE7',
+    cardTagText: '#000000',
+    switchFalse: '#F9A825',
+    switchTrue: '#FFEB3B',
+    thumb: '#FFEB3B',
+    icon: '#FFFDE7',
+    placeholder: '#FFEE58',
+  },
+  'purple-light': {
+    primaryBg: '#FCF8FF',
+    secondaryBg: '#FFFFFF',
+    primaryText: '#4A148C',
+    secondaryText: '#7B1FA2',
+    tertiaryText: '#BA68C8',
+    headerText: '#6A1B9A',
+    accent: '#BA68C8',
+    accentLight: '#E1BEE7',
+    shadow: '#7B1FA2',
+    border: '#CE93D8',
+    tagBg: '#F3E5F5',
+    pinnedBg: '#F3E5F5',
+    pinnedBorder: '#E1BEE7',
+    fabShadow: '#BA68C8',
+    modalClose: '#6A1B9A',
+    cardTagText: '#6A1B9A',
+    switchFalse: '#9e9e9e',
+    switchTrue: '#E1BEE7',
+    thumb: '#BA68C8',
+    icon: '#6A1B9A',
+    placeholder: '#BA68C8',
+  },
+  'purple-dark': {
+    primaryBg: '#1A001A',
+    secondaryBg: '#300030',
+    primaryText: '#E1BEE7',
+    secondaryText: '#CE93D8',
+    tertiaryText: '#BA68C8',
+    headerText: '#F3E5F5',
+    accent: '#AB47BC',
+    accentLight: '#AB47BC',
+    shadow: '#000000',
+    border: '#7B1FA2',
+    tagBg: '#6A1B9A',
+    pinnedBg: '#4A148C',
+    pinnedBorder: '#AB47BC',
+    fabShadow: '#AB47BC',
+    modalClose: '#F3E5F5',
+    cardTagText: '#FFFFFF',
+    switchFalse: '#7B1FA2',
+    switchTrue: '#AB47BC',
+    thumb: '#AB47BC',
+    icon: '#F3E5F5',
+    placeholder: '#BA68C8',
+  },
+  'orange-light': {
+    primaryBg: '#FFF3E0',
+    secondaryBg: '#FFFFFF',
+    primaryText: '#BF360C',
+    secondaryText: '#EF6C00',
+    tertiaryText: '#FFAB91',
+    headerText: '#E65100',
+    accent: '#FFAB91',
+    accentLight: '#FFCCBC',
+    shadow: '#EF6C00',
+    border: '#FFAB91',
+    tagBg: '#FFE0B2',
+    pinnedBg: '#FFE0B2',
+    pinnedBorder: '#FFCCBC',
+    fabShadow: '#FFAB91',
+    modalClose: '#E65100',
+    cardTagText: '#E65100',
+    switchFalse: '#9e9e9e',
+    switchTrue: '#FFCCBC',
+    thumb: '#FFAB91',
+    icon: '#E65100',
+    placeholder: '#FFAB91',
+  },
+  'orange-dark': {
+    primaryBg: '#2D1400',
+    secondaryBg: '#4E2A0B',
+    primaryText: '#FFCCBC',
+    secondaryText: '#FFB74D',
+    tertiaryText: '#FFA726',
+    headerText: '#FFE0B2',
+    accent: '#FF7043',
+    accentLight: '#FF7043',
+    shadow: '#000000',
+    border: '#EF6C00',
+    tagBg: '#EF6C00',
+    pinnedBg: '#D84315',
+    pinnedBorder: '#FF7043',
+    fabShadow: '#FF7043',
+    modalClose: '#FFE0B2',
+    cardTagText: '#FFFFFF',
+    switchFalse: '#EF6C00',
+    switchTrue: '#FF7043',
+    thumb: '#FF7043',
+    icon: '#FFE0B2',
+    placeholder: '#FFA726',
+  },
+};
+
+const createStyles = (c) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.primaryBg },
   header: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 12 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerTitle: { fontSize: 28, fontWeight: '700', color: '#6b2d6b', marginBottom: 8 },
+  headerTitle: { fontSize: 28, fontWeight: '700', color: c.headerText, marginBottom: 8 },
   search: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.secondaryBg,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 16,
-    shadowColor: '#6b2d6b',
+    shadowColor: c.shadow,
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
-    color: '#4a2b4a',
+    color: c.primaryText,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: c.border,
   },
   themeToggle: { marginLeft: 12, flexDirection: 'row', alignItems: 'center' },
-  themeLabel: { fontSize: 14, marginRight: 8, color: '#5b3b5b' },
+  themeLabel: { fontSize: 14, marginRight: 8, color: c.secondaryText },
   tagsContainer: { marginTop: 10, marginBottom: 10 },
   tagButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.secondaryBg,
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 8,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: c.border,
   },
-  tagButtonSelected: { backgroundColor: '#FFD9E8', borderColor: '#ff6fa3' },
-  tagText: { fontSize: 14, color: '#4a2b4a', fontWeight: '600' },
-  tagTextSelected: { color: '#6b2d6b' },
-  listContainer: { paddingHorizontal: 16, paddingBottom: 120, paddingTop: 10 },
+  tagButtonSelected: { backgroundColor: c.accentLight, borderColor: c.accent },
+  tagText: { fontSize: 14, color: c.primaryText, fontWeight: '600' },
+  tagTextSelected: { color: c.headerText },
+  listContainer: { paddingHorizontal: 8, paddingBottom: 80, paddingTop: 10 },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.secondaryBg,
     borderRadius: 14,
-    padding: 14,
-    marginBottom: 12,
-    shadowColor: '#6b2d6b',
+    padding: 10,
+    shadowColor: c.shadow,
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 6,
     elevation: 5,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: c.border,
   },
-  cardPinned: { borderWidth: 2, borderColor: '#FFD9E8', backgroundColor: '#E6FFF4' },
+  cardPinned: { borderWidth: 2, borderColor: c.pinnedBorder, backgroundColor: c.pinnedBg },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: '#4a2b4a', flex: 1, marginRight: 8 },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: c.primaryText, flex: 1, marginRight: 8 },
   cardActions: { flexDirection: 'row', alignItems: 'center' },
-  actionBtn: { padding: 8, borderRadius: 8 }, // Removed marginLeft to avoid extra spacing
+  actionBtn: { padding: 8, borderRadius: 8 },
   actionEmoji: { fontSize: 18 },
-  cardBody: { marginTop: 8, fontSize: 14, color: '#5b3b5b' },
-  cardTags: { marginTop: 8, flexDirection: 'row', flexWrap: 'wrap' },
+  cardBody: { marginTop: 4, fontSize: 14, color: c.secondaryText },
+  cardTags: { marginTop: 4, flexDirection: 'row', flexWrap: 'wrap' },
   cardTag: {
-    backgroundColor: '#F3E8FF',
+    backgroundColor: c.tagBg,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
     marginRight: 6,
     marginBottom: 6,
   },
-  cardTagText: { fontSize: 12, color: '#6b2d6b' },
-  cardFooter: { marginTop: 10, alignItems: 'flex-end' },
-  footerText: { fontSize: 11, color: '#9b7b9b' },
+  cardTagText: { fontSize: 12, color: c.cardTagText },
+  cardFooter: { marginTop: 6, alignItems: 'flex-end' },
+  footerText: { fontSize: 11, color: c.tertiaryText },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
-  emptyText: { color: '#9b7b9b', fontSize: 16 },
+  emptyText: { color: c.tertiaryText, fontSize: 16 },
   fab: {
     position: 'absolute',
     right: 20,
     bottom: 34,
-    backgroundColor: '#ff6fa3',
+    backgroundColor: c.accent,
     width: 64,
     height: 64,
     borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 6,
-    shadowColor: '#ff6fa3',
+    shadowColor: c.fabShadow,
     shadowOpacity: 0.25,
     shadowRadius: 12,
   },
   fabText: { color: '#fff', fontSize: 34, lineHeight: 36 },
-  modalContainer: { flex: 1, backgroundColor: '#FFF7FB' },
+  modalContainer: { flex: 1, backgroundColor: c.primaryBg },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -199,102 +478,102 @@ const lightStyles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 12,
   },
-  modalClose: { fontSize: 22, color: '#6b2d6b' },
-  modalTitle: { fontSize: 18, color: '#6b2d6b', fontWeight: '700' },
-  modalSave: { fontSize: 16, color: '#ff6fa3', fontWeight: '700' },
+  modalClose: { fontSize: 22, color: c.modalClose },
+  modalTitle: { fontSize: 18, color: c.headerText, fontWeight: '700' },
+  modalSave: { fontSize: 16, color: c.accent, fontWeight: '700' },
   modalBody: { paddingHorizontal: 16, paddingTop: 8 },
   inputTitle: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.secondaryBg,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
     marginBottom: 12,
-    shadowColor: '#6b2d6b',
+    shadowColor: c.shadow,
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 2,
-    color: '#4a2b4a',
+    color: c.primaryText,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: c.border,
   },
   inputBody: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.secondaryBg,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 14,
     fontSize: 15,
     minHeight: 160,
     textAlignVertical: 'top',
-    shadowColor: '#6b2d6b',
+    shadowColor: c.shadow,
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 2,
-    color: '#4a2b4a',
+    color: c.primaryText,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: c.border,
   },
   inputTags: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.secondaryBg,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
     marginBottom: 12,
-    shadowColor: '#6b2d6b',
+    shadowColor: c.shadow,
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 2,
-    color: '#4a2b4a',
+    color: c.primaryText,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: c.border,
     minHeight: 40,
   },
   pinRow: { marginTop: 12, flexDirection: 'row' },
   pinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.secondaryBg,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 10,
-    shadowColor: '#6b2d6b',
+    shadowColor: c.shadow,
     shadowOpacity: 0.02,
     shadowRadius: 6,
     elevation: 1,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: c.border,
   },
   pinEmoji: { fontSize: 18, marginRight: 8 },
-  pinText: { fontSize: 14, color: '#6b2d6b', fontWeight: '600' },
+  pinText: { fontSize: 14, color: c.headerText, fontWeight: '600' },
   typeToggleContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   typeButton: {
     flex: 1,
     padding: 10,
     borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.secondaryBg,
     alignItems: 'center',
     marginHorizontal: 5,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: c.border,
   },
-  typeButtonSelected: { backgroundColor: '#FFD9E8', borderColor: '#ff6fa3' },
-  typeButtonText: { fontSize: 14, color: '#4a2b4a', fontWeight: '600' },
-  typeButtonTextSelected: { color: '#6b2d6b' },
+  typeButtonSelected: { backgroundColor: c.accentLight, borderColor: c.accent },
+  typeButtonText: { fontSize: 14, color: c.primaryText, fontWeight: '600' },
+  typeButtonTextSelected: { color: c.headerText },
   checklistItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.secondaryBg,
     borderRadius: 8,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: c.border,
   },
-  checklistInput: { flex: 1, fontSize: 15, color: '#4a2b4a', paddingVertical: 0 },
+  checklistInput: { flex: 1, fontSize: 15, color: c.primaryText, paddingVertical: 0 },
   checklistAddButton: {
     padding: 10,
-    backgroundColor: '#ff6fa3',
+    backgroundColor: c.accent,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
@@ -305,241 +584,34 @@ const lightStyles = StyleSheet.create({
   reminderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.secondaryBg,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 10,
-    shadowColor: '#6b2d6b',
+    shadowColor: c.shadow,
     shadowOpacity: 0.02,
     shadowRadius: 6,
     elevation: 1,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: c.border,
     marginRight: 10,
   },
-  reminderText: { fontSize: 14, color: '#6b2d6b', fontWeight: '600' },
+  reminderText: { fontSize: 14, color: c.headerText, fontWeight: '600' },
   reminderClearBtn: { padding: 8 },
-  cardReminder: { marginTop: 8, fontSize: 13, color: '#ff6fa3', fontWeight: '600' },
-});
-
-// Dark theme styles
-const darkStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1A1A1A' },
-  header: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 12 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerTitle: { fontSize: 28, fontWeight: '700', color: '#F5F5F5', marginBottom: 8 },
-  search: {
-    flex: 1,
-    backgroundColor: '#333333',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 16,
-    shadowColor: '#000000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-    color: '#E0E0E0',
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
-  },
-  themeToggle: { marginLeft: 12, flexDirection: 'row', alignItems: 'center' },
-  themeLabel: { fontSize: 14, marginRight: 8, color: '#B0B0B0' },
-  tagsContainer: { marginTop: 10, marginBottom: 10 },
-  tagButton: {
-    backgroundColor: '#333333',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
-  },
-  tagButtonSelected: { backgroundColor: '#F06292', borderColor: '#F06292' },
-  tagText: { fontSize: 14, color: '#E0E0E0', fontWeight: '600' },
-  tagTextSelected: { color: '#FFFFFF' },
-  listContainer: { paddingHorizontal: 16, paddingBottom: 120, paddingTop: 10 },
-  card: {
-    backgroundColor: '#2E2E2E',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 12,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
-  },
-  cardPinned: { borderWidth: 2, borderColor: '#F06292', backgroundColor: '#26A69A' },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: '#E0E0E0', flex: 1, marginRight: 8 },
-  cardActions: { flexDirection: 'row', alignItems: 'center' },
-  actionBtn: { padding: 8, borderRadius: 8 }, // Removed marginLeft to avoid extra spacing
-  actionEmoji: { fontSize: 18 },
-  cardBody: { marginTop: 8, fontSize: 14, color: '#B0B0B0' },
-  cardTags: { marginTop: 8, flexDirection: 'row', flexWrap: 'wrap' },
-  cardTag: {
-    backgroundColor: '#9575CD',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginRight: 6,
-    marginBottom: 6,
-  },
-  cardTagText: { fontSize: 12, color: '#FFFFFF' },
-  cardFooter: { marginTop: 10, alignItems: 'flex-end' },
-  footerText: { fontSize: 11, color: '#757575' },
-  empty: { alignItems: 'center', marginTop: 60 },
-  emptyEmoji: { fontSize: 48, marginBottom: 12 },
-  emptyText: { color: '#757575', fontSize: 16 },
-  fab: {
+  cardReminder: { marginTop: 8, fontSize: 13, color: c.accent, fontWeight: '600' },
+  bottomBar: {
     position: 'absolute',
-    right: 20,
-    bottom: 34,
-    backgroundColor: '#F06292',
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#F06292',
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-  },
-  fabText: { color: '#FFF', fontSize: 34, lineHeight: 36 },
-  modalContainer: { flex: 1, backgroundColor: '#1A1A1A' },
-  modalHeader: {
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 18,
-    paddingBottom: 12,
+    backgroundColor: c.primaryBg,
+    borderTopWidth: 1,
+    borderTopColor: c.border,
   },
-  modalClose: { fontSize: 22, color: '#F5F5F5' },
-  modalTitle: { fontSize: 18, color: '#F5F5F5', fontWeight: '700' },
-  modalSave: { fontSize: 16, color: '#F06292', fontWeight: '700' },
-  modalBody: { paddingHorizontal: 16, paddingTop: 8 },
-  inputTitle: {
-    backgroundColor: '#333333',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-    color: '#E0E0E0',
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
-  },
-  inputBody: {
-    backgroundColor: '#333333',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    fontSize: 15,
-    minHeight: 160,
-    textAlignVertical: 'top',
-    shadowColor: '#000000',
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-    color: '#E0E0E0',
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
-  },
-  inputTags: {
-    backgroundColor: '#333333',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-    color: '#E0E0E0',
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
-    minHeight: 40,
-  },
-  pinRow: { marginTop: 12, flexDirection: 'row' },
-  pinBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#333333',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 10,
-    shadowColor: '#000000',
-    shadowOpacity: 0.02,
-    shadowRadius: 6,
-    elevation: 1,
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
-  },
-  pinEmoji: { fontSize: 18, marginRight: 8 },
-  pinText: { fontSize: 14, color: '#F5F5F5', fontWeight: '600' },
-  typeToggleContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  typeButton: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 10,
-    backgroundColor: '#333333',
-    alignItems: 'center',
-    marginHorizontal: 5,
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
-  },
-  typeButtonSelected: { backgroundColor: '#F06292', borderColor: '#F06292' },
-  typeButtonText: { fontSize: 14, color: '#E0E0E0', fontWeight: '600' },
-  typeButtonTextSelected: { color: '#FFFFFF' },
-  checklistItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    backgroundColor: '#333333',
-    borderRadius: 8,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
-  },
-  checklistInput: { flex: 1, fontSize: 15, color: '#E0E0E0', paddingVertical: 0 },
-  checklistAddButton: {
-    padding: 10,
-    backgroundColor: '#F06292',
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  checklistAddText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
-  checklistCheckbox: { marginRight: 10 },
-  reminderRow: { marginTop: 12, flexDirection: 'row', alignItems: 'center' },
-  reminderBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#333333',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 10,
-    shadowColor: '#000000',
-    shadowOpacity: 0.02,
-    shadowRadius: 6,
-    elevation: 1,
-    borderWidth: 1,
-    borderColor: '#4A4A4A',
-    marginRight: 10,
-  },
-  reminderText: { fontSize: 14, color: '#F5F5F5', fontWeight: '600' },
-  reminderClearBtn: { padding: 8 },
-  cardReminder: { marginTop: 8, fontSize: 13, color: '#F06292', fontWeight: '600' },
 });
 
 export default function App() {
@@ -547,23 +619,30 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('ALL');
   const [modalVisible, setModalVisible] = useState(false);
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
-  const [theme, setTheme] = useState('light');
+  const [mode, setMode] = useState('light');
+  const [palette, setPalette] = useState('default');
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const titleRef = useRef(null);
+  const listRef = useRef(null);
 
-  const styles = theme === 'light' ? lightStyles : darkStyles;
-  const placeholderColor = theme === 'light' ? '#9e9e9e' : '#757575';
+  const currentTheme = `${palette}-${mode}`;
+  const themeColors = colors[currentTheme];
+  const styles = createStyles(themeColors);
+  const placeholderColor = themeColors.placeholder;
   const switchTrackColor = {
-    false: theme === 'light' ? '#9e9e9e' : '#757575',
-    true: theme === 'light' ? '#FFD9E8' : '#F06292',
+    false: themeColors.switchFalse,
+    true: themeColors.switchTrue,
   };
-  const switchThumbColor = theme === 'light' ? '#ff6fa3' : '#F06292';
+  const switchThumbColor = themeColors.thumb;
+  const iconColor = themeColors.icon;
 
   useEffect(() => {
     setupNotifications();
     loadNotes();
-    loadTheme();
+    loadMode();
+    loadPalette();
     // Add a test note to ensure cards render
     setNotes([
       {
@@ -588,8 +667,9 @@ export default function App() {
   }, [notes]);
 
   useEffect(() => {
-    saveTheme();
-  }, [theme]);
+    saveMode();
+    savePalette();
+  }, [mode, palette]);
 
   const loadNotes = async () => {
     try {
@@ -621,27 +701,46 @@ export default function App() {
     }
   };
 
-  const loadTheme = async () => {
+  const loadMode = async () => {
     try {
-      const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-      if (savedTheme && ['light', 'dark'].includes(savedTheme)) {
-        setTheme(savedTheme);
+      const savedMode = await AsyncStorage.getItem(MODE_STORAGE_KEY);
+      if (savedMode && ['light', 'dark'].includes(savedMode)) {
+        setMode(savedMode);
       }
     } catch (e) {
-      console.warn('Failed loading theme', e);
+      console.warn('Failed loading mode', e);
     }
   };
 
-  const saveTheme = async () => {
+  const saveMode = async () => {
     try {
-      await AsyncStorage.setItem(THEME_STORAGE_KEY, theme);
+      await AsyncStorage.setItem(MODE_STORAGE_KEY, mode);
     } catch (e) {
-      console.warn('Failed saving theme', e);
+      console.warn('Failed saving mode', e);
     }
   };
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  const loadPalette = async () => {
+    try {
+      const savedPalette = await AsyncStorage.getItem(PALETTE_STORAGE_KEY);
+      if (savedPalette && ['default', 'blue', 'green', 'yellow', 'purple', 'orange'].includes(savedPalette)) {
+        setPalette(savedPalette);
+      }
+    } catch (e) {
+      console.warn('Failed loading palette', e);
+    }
+  };
+
+  const savePalette = async () => {
+    try {
+      await AsyncStorage.setItem(PALETTE_STORAGE_KEY, palette);
+    } catch (e) {
+      console.warn('Failed saving palette', e);
+    }
+  };
+
+  const toggleMode = () => {
+    setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   const openNewNote = () => {
@@ -900,10 +999,10 @@ export default function App() {
       return b.updatedAt - a.updatedAt;
     });
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, index }) => {
     console.log('Rendering note:', item); // Debug log
     return (
-      <TouchableOpacity activeOpacity={0.9} onPress={() => openEditNote(item)}>
+      <TouchableOpacity style={{ flex: 1, ...(index % 2 === 0 ? { marginRight: 4 } : { marginLeft: 4 }), marginBottom: 8 }} activeOpacity={0.9} onPress={() => openEditNote(item)}>
         <View style={[styles.card, item.pinned ? styles.cardPinned : null]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle} numberOfLines={1}>
@@ -917,7 +1016,7 @@ export default function App() {
                 }}
                 style={styles.actionBtn}
               >
-                <MaterialIcons name="more-vert" size={24} color={theme === 'light' ? '#4a2b4a' : '#E0E0E0'} />
+                <MaterialIcons name="more-vert" size={24} color={themeColors.primaryText} />
               </TouchableOpacity>
             </View>
           </View>
@@ -927,8 +1026,9 @@ export default function App() {
                 <View key={index} style={styles.checklistItem}>
                   <Text style={styles.checklistCheckbox}>{todo.completed ? '✅' : '⬜'}</Text>
                   <Text
-                    style={[styles.cardBody, todo.completed && { textDecorationLine: 'line-through' }]}
+                    style={[styles.cardBody, { flex: 1 }, todo.completed && { textDecorationLine: 'line-through' }]}
                     numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     {todo.text}
                   </Text>
@@ -1003,7 +1103,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
-        barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        barStyle={mode === 'light' ? 'dark-content' : 'light-content'}
         backgroundColor="transparent"
         translucent
       />
@@ -1017,15 +1117,6 @@ export default function App() {
             value={query}
             onChangeText={setQuery}
           />
-          <View style={styles.themeToggle}>
-            <Text style={styles.themeLabel}>{theme === 'light' ? '☀️ Light' : '🌙 Dark'}</Text>
-            <Switch
-              value={theme === 'dark'}
-              onValueChange={toggleTheme}
-              trackColor={switchTrackColor}
-              thumbColor={switchThumbColor}
-            />
-          </View>
         </View>
         <FlatList
           data={tags}
@@ -1039,10 +1130,12 @@ export default function App() {
       </View>
 
       <FlatList
+        ref={listRef}
         data={filtered}
         keyExtractor={(it) => it.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
+        numColumns={2}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyEmoji}>📝</Text>
@@ -1051,9 +1144,17 @@ export default function App() {
         }
       />
 
-      <TouchableOpacity style={styles.fab} onPress={openNewNote}>
-        <Text style={styles.fabText}>＋</Text>
-      </TouchableOpacity>
+      <View style={styles.bottomBar}>
+        <TouchableOpacity onPress={() => listRef.current?.scrollToOffset({ animated: true, offset: 0 })}>
+          <MaterialIcons name="home" size={28} color={iconColor} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={openNewNote}>
+          <MaterialIcons name="add" size={28} color={iconColor} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setSettingsModalVisible(true)}>
+          <MaterialIcons name="settings" size={28} color={iconColor} />
+        </TouchableOpacity>
+      </View>
 
       <Modal animationType="slide" visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <SafeAreaView style={styles.modalContainer}>
@@ -1173,6 +1274,43 @@ export default function App() {
             onCancel={() => setDatePickerVisible(false)}
             minimumDate={new Date()}
           />
+        </SafeAreaView>
+      </Modal>
+      <Modal animationType="slide" visible={settingsModalVisible} onRequestClose={() => setSettingsModalVisible(false)}>
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setSettingsModalVisible(false)}>
+              <Text style={styles.modalClose}>✕</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Settings</Text>
+            <View />
+          </View>
+          <View style={styles.modalBody}>
+            <View style={styles.themeToggle}>
+              <Text style={styles.themeLabel}>{mode === 'light' ? '☀️ Light' : '🌙 Dark'}</Text>
+              <Switch
+                value={mode === 'dark'}
+                onValueChange={toggleMode}
+                trackColor={switchTrackColor}
+                thumbColor={switchThumbColor}
+              />
+            </View>
+            <View style={{ marginTop: 20 }}>
+              <Text style={styles.themeLabel}>Color Palette</Text>
+              <Picker
+                selectedValue={palette}
+                onValueChange={(itemValue) => setPalette(itemValue)}
+                style={{ color: themeColors.primaryText }}
+              >
+                <Picker.Item label="Default" value="default" />
+                <Picker.Item label="Pastel Blue" value="blue" />
+                <Picker.Item label="Pastel Green" value="green" />
+                <Picker.Item label="Pastel Yellow" value="yellow" />
+                <Picker.Item label="Pastel Purple" value="purple" />
+                <Picker.Item label="Pastel Orange" value="orange" />
+              </Picker>
+            </View>
+          </View>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
