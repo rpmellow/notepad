@@ -156,7 +156,7 @@ const lightStyles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: 16, fontWeight: '700', color: '#4a2b4a', flex: 1, marginRight: 8 },
   cardActions: { flexDirection: 'row', alignItems: 'center' },
-  actionBtn: { padding: 8, marginLeft: 6, borderRadius: 8 },
+  actionBtn: { padding: 8, borderRadius: 8 }, // Removed marginLeft to avoid extra spacing
   actionEmoji: { fontSize: 18 },
   cardBody: { marginTop: 8, fontSize: 14, color: '#5b3b5b' },
   cardTags: { marginTop: 8, flexDirection: 'row', flexWrap: 'wrap' },
@@ -376,7 +376,7 @@ const darkStyles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: 16, fontWeight: '700', color: '#E0E0E0', flex: 1, marginRight: 8 },
   cardActions: { flexDirection: 'row', alignItems: 'center' },
-  actionBtn: { padding: 8, marginLeft: 6, borderRadius: 8 },
+  actionBtn: { padding: 8, borderRadius: 8 }, // Removed marginLeft to avoid extra spacing
   actionEmoji: { fontSize: 18 },
   cardBody: { marginTop: 8, fontSize: 14, color: '#B0B0B0' },
   cardTags: { marginTop: 8, flexDirection: 'row', flexWrap: 'wrap' },
@@ -786,6 +786,33 @@ export default function App() {
     }
   };
 
+  const showActionMenu = (item) => {
+    Alert.alert(
+      'Note Actions',
+      '',
+      [
+        {
+          text: item.pinned ? 'Unpin' : 'Pin',
+          onPress: () => togglePin(item.id),
+        },
+        {
+          text: 'Share',
+          onPress: () => shareNote(item),
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => confirmDelete(item.id),
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const getTags = () => {
     const allTags = notes.reduce((acc, note) => {
       if (note.tags && note.tags.length > 0) {
@@ -883,26 +910,14 @@ export default function App() {
               {item.title || 'Untitled'}
             </Text>
             <View style={styles.cardActions}>
-              <TouchableOpacity onPress={() => togglePin(item.id)} style={styles.actionBtn}>
-                <Text style={styles.actionEmoji}>{item.pinned ? '📌' : '📍'}</Text>
-              </TouchableOpacity>
               <TouchableOpacity
                 onPress={(e) => {
                   e.stopPropagation();
-                  shareNote(item);
+                  showActionMenu(item);
                 }}
                 style={styles.actionBtn}
               >
-                <MaterialIcons name="share" size={18} color={theme === 'light' ? '#4a2b4a' : '#E0E0E0'} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={(e) => {
-                  e.stopPropagation();
-                  confirmDelete(item.id);
-                }}
-                style={styles.actionBtn}
-              >
-                <Text style={styles.actionEmoji}>🗑️</Text>
+                <MaterialIcons name="more-vert" size={24} color={theme === 'light' ? '#4a2b4a' : '#E0E0E0'} />
               </TouchableOpacity>
             </View>
           </View>
@@ -944,7 +959,11 @@ export default function App() {
           )}
           <View style={styles.cardFooter}>
             <Text style={styles.footerText}>
-              {new Date(item.updatedAt || item.createdAt).toLocaleString()}
+              {new Date(item.updatedAt || item.createdAt).toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })}
             </Text>
           </View>
         </View>
