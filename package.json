@@ -1,9 +1,18 @@
 {
   "dependencies": {
     "react-native-paper": "4.9.2",
-    "@expo/vector-icons": "^15.0.2",
+    "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "react-native-vector-icons/MaterialIcons": "*",
-    "react-native-vector-icons": "10.3.0"
+    "react-native-vector-icons": "10.3.0",
+    "react-native-push-notification": "*",
+    "@react-native-community/push-notification-ios": "1.10.1",
+    "expo-notifications": "~0.32.12",
+    "expo-constants": "~18.0.10",
+    "jquery": "^1.0.0",
+    "datetimepicker": "*",
+    "expo-device": "~8.0.9",
+    "@react-native-community/datetimepicker": "8.4.4",
+    "react-native-modal-datetime-picker": "*"
   }
 }
