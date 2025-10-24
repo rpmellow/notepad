@@ -18,6 +18,8 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import * as Notifications from 'expo-notifications';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -27,8 +29,65 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const STORAGE_KEY = '@cute_notepad_notes_v1';
 const THEME_STORAGE_KEY = '@cute_notepad_theme_v1';
 
+// Notification setup
+async function setupNotifications() {
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status !== 'granted') {
+    const { status: newStatus } = await Notifications.requestPermissionsAsync();
+    if (newStatus !== 'granted') {
+      Alert.alert('Error', 'Notification permissions are required for reminders.');
+    }
+  }
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+    });
+  }
+}
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 function uid() {
   return Date.now().toString() + Math.random().toString(36).slice(2, 9);
+}
+
+// Schedule a notification
+async function scheduleNotification(note) {
+  if (!note.reminder) return null;
+  const trigger = new Date(note.reminder);
+  if (trigger <= new Date()) return null;
+
+  try {
+    const identifier = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: note.title || 'Note Reminder',
+        body: note.type === 'todo' ? note.checklist.map((item) => item.text).join('\n') : note.body || 'No content',
+      },
+      trigger,
+    });
+    return identifier;
+  } catch (error) {
+    console.warn('Error scheduling notification:', error);
+    return null;
+  }
+}
+
+// Cancel a notification
+async function cancelNotification(identifier) {
+  if (identifier) {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(identifier);
+    } catch (error) {
+      console.warn('Error cancelling notification:', error);
+    }
+  }
 }
 
 // Function to get greeting based on time of day
@@ -43,28 +102,12 @@ const getGreeting = () => {
   }
 };
 
-// Light theme styles (unchanged)
+// Light theme styles
 const lightStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF7FB',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 12,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#6b2d6b',
-    marginBottom: 8,
-  },
+  container: { flex: 1, backgroundColor: '#FFF7FB' },
+  header: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 12 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerTitle: { fontSize: 28, fontWeight: '700', color: '#6b2d6b', marginBottom: 8 },
   search: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -80,20 +123,9 @@ const lightStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
-  themeToggle: {
-    marginLeft: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  themeLabel: {
-    fontSize: 14,
-    marginRight: 8,
-    color: '#5b3b5b',
-  },
-  tagsContainer: {
-    marginTop: 10,
-    marginBottom: 10,
-  },
+  themeToggle: { marginLeft: 12, flexDirection: 'row', alignItems: 'center' },
+  themeLabel: { fontSize: 14, marginRight: 8, color: '#5b3b5b' },
+  tagsContainer: { marginTop: 10, marginBottom: 10 },
   tagButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -103,23 +135,10 @@ const lightStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
-  tagButtonSelected: {
-    backgroundColor: '#FFD9E8',
-    borderColor: '#ff6fa3',
-  },
-  tagText: {
-    fontSize: 14,
-    color: '#4a2b4a',
-    fontWeight: '600',
-  },
-  tagTextSelected: {
-    color: '#6b2d6b',
-  },
-  listContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 120,
-    paddingTop: 10,
-  },
+  tagButtonSelected: { backgroundColor: '#FFD9E8', borderColor: '#ff6fa3' },
+  tagText: { fontSize: 14, color: '#4a2b4a', fontWeight: '600' },
+  tagTextSelected: { color: '#6b2d6b' },
+  listContainer: { paddingHorizontal: 16, paddingBottom: 120, paddingTop: 10 },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
@@ -133,45 +152,14 @@ const lightStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
-  cardPinned: {
-    borderWidth: 2,
-    borderColor: '#FFD9E8',
-    backgroundColor: '#E6FFF4',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#4a2b4a',
-    flex: 1,
-    marginRight: 8,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionBtn: {
-    padding: 8,
-    marginLeft: 6,
-    borderRadius: 8,
-  },
-  actionEmoji: {
-    fontSize: 18,
-  },
-  cardBody: {
-    marginTop: 8,
-    fontSize: 14,
-    color: '#5b3b5b',
-  },
-  cardTags: {
-    marginTop: 8,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
+  cardPinned: { borderWidth: 2, borderColor: '#FFD9E8', backgroundColor: '#E6FFF4' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: '#4a2b4a', flex: 1, marginRight: 8 },
+  cardActions: { flexDirection: 'row', alignItems: 'center' },
+  actionBtn: { padding: 8, marginLeft: 6, borderRadius: 8 },
+  actionEmoji: { fontSize: 18 },
+  cardBody: { marginTop: 8, fontSize: 14, color: '#5b3b5b' },
+  cardTags: { marginTop: 8, flexDirection: 'row', flexWrap: 'wrap' },
   cardTag: {
     backgroundColor: '#F3E8FF',
     borderRadius: 8,
@@ -180,30 +168,12 @@ const lightStyles = StyleSheet.create({
     marginRight: 6,
     marginBottom: 6,
   },
-  cardTagText: {
-    fontSize: 12,
-    color: '#6b2d6b',
-  },
-  cardFooter: {
-    marginTop: 10,
-    alignItems: 'flex-end',
-  },
-  footerText: {
-    fontSize: 11,
-    color: '#9b7b9b',
-  },
-  empty: {
-    alignItems: 'center',
-    marginTop: 60,
-  },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  emptyText: {
-    color: '#9b7b9b',
-    fontSize: 16,
-  },
+  cardTagText: { fontSize: 12, color: '#6b2d6b' },
+  cardFooter: { marginTop: 10, alignItems: 'flex-end' },
+  footerText: { fontSize: 11, color: '#9b7b9b' },
+  empty: { alignItems: 'center', marginTop: 60 },
+  emptyEmoji: { fontSize: 48, marginBottom: 12 },
+  emptyText: { color: '#9b7b9b', fontSize: 16 },
   fab: {
     position: 'absolute',
     right: 20,
@@ -219,15 +189,8 @@ const lightStyles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 12,
   },
-  fabText: {
-    color: '#fff',
-    fontSize: 34,
-    lineHeight: 36,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#FFF7FB',
-  },
+  fabText: { color: '#fff', fontSize: 34, lineHeight: 36 },
+  modalContainer: { flex: 1, backgroundColor: '#FFF7FB' },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -236,24 +199,10 @@ const lightStyles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 12,
   },
-  modalClose: {
-    fontSize: 22,
-    color: '#6b2d6b',
-  },
-  modalTitle: {
-    fontSize: 18,
-    color: '#6b2d6b',
-    fontWeight: '700',
-  },
-  modalSave: {
-    fontSize: 16,
-    color: '#ff6fa3',
-    fontWeight: '700',
-  },
-  modalBody: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
+  modalClose: { fontSize: 22, color: '#6b2d6b' },
+  modalTitle: { fontSize: 18, color: '#6b2d6b', fontWeight: '700' },
+  modalSave: { fontSize: 16, color: '#ff6fa3', fontWeight: '700' },
+  modalBody: { paddingHorizontal: 16, paddingTop: 8 },
   inputTitle: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -301,10 +250,7 @@ const lightStyles = StyleSheet.create({
     borderColor: '#E0E0E0',
     minHeight: 40,
   },
-  pinRow: {
-    marginTop: 12,
-    flexDirection: 'row',
-  },
+  pinRow: { marginTop: 12, flexDirection: 'row' },
   pinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -319,21 +265,9 @@ const lightStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
-  pinEmoji: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  pinText: {
-    fontSize: 14,
-    color: '#6b2d6b',
-    fontWeight: '600',
-  },
-  // New styles for to-do list
-  typeToggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
+  pinEmoji: { fontSize: 18, marginRight: 8 },
+  pinText: { fontSize: 14, color: '#6b2d6b', fontWeight: '600' },
+  typeToggleContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   typeButton: {
     flex: 1,
     padding: 10,
@@ -344,18 +278,9 @@ const lightStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
-  typeButtonSelected: {
-    backgroundColor: '#FFD9E8',
-    borderColor: '#ff6fa3',
-  },
-  typeButtonText: {
-    fontSize: 14,
-    color: '#4a2b4a',
-    fontWeight: '600',
-  },
-  typeButtonTextSelected: {
-    color: '#6b2d6b',
-  },
+  typeButtonSelected: { backgroundColor: '#FFD9E8', borderColor: '#ff6fa3' },
+  typeButtonText: { fontSize: 14, color: '#4a2b4a', fontWeight: '600' },
+  typeButtonTextSelected: { color: '#6b2d6b' },
   checklistItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -366,12 +291,7 @@ const lightStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
-  checklistInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#4a2b4a',
-    paddingVertical: 0,
-  },
+  checklistInput: { flex: 1, fontSize: 15, color: '#4a2b4a', paddingVertical: 0 },
   checklistAddButton: {
     padding: 10,
     backgroundColor: '#ff6fa3',
@@ -379,38 +299,35 @@ const lightStyles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  checklistAddText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  checklistCheckbox: {
-    marginRight: 10,
-  },
-});
-
-// Dark theme styles (unchanged except for new to-do list styles)
-const darkStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1A1A1A',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 12,
-  },
-  headerRow: {
+  checklistAddText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  checklistCheckbox: { marginRight: 10 },
+  reminderRow: { marginTop: 12, flexDirection: 'row', alignItems: 'center' },
+  reminderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    shadowColor: '#6b2d6b',
+    shadowOpacity: 0.02,
+    shadowRadius: 6,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    marginRight: 10,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#F5F5F5',
-    marginBottom: 8,
-  },
+  reminderText: { fontSize: 14, color: '#6b2d6b', fontWeight: '600' },
+  reminderClearBtn: { padding: 8 },
+  cardReminder: { marginTop: 8, fontSize: 13, color: '#ff6fa3', fontWeight: '600' },
+});
+
+// Dark theme styles
+const darkStyles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#1A1A1A' },
+  header: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 12 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerTitle: { fontSize: 28, fontWeight: '700', color: '#F5F5F5', marginBottom: 8 },
   search: {
     flex: 1,
     backgroundColor: '#333333',
@@ -426,20 +343,9 @@ const darkStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4A4A4A',
   },
-  themeToggle: {
-    marginLeft: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  themeLabel: {
-    fontSize: 14,
-    marginRight: 8,
-    color: '#B0B0B0',
-  },
-  tagsContainer: {
-    marginTop: 10,
-    marginBottom: 10,
-  },
+  themeToggle: { marginLeft: 12, flexDirection: 'row', alignItems: 'center' },
+  themeLabel: { fontSize: 14, marginRight: 8, color: '#B0B0B0' },
+  tagsContainer: { marginTop: 10, marginBottom: 10 },
   tagButton: {
     backgroundColor: '#333333',
     borderRadius: 16,
@@ -449,23 +355,10 @@ const darkStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4A4A4A',
   },
-  tagButtonSelected: {
-    backgroundColor: '#F06292',
-    borderColor: '#F06292',
-  },
-  tagText: {
-    fontSize: 14,
-    color: '#E0E0E0',
-    fontWeight: '600',
-  },
-  tagTextSelected: {
-    color: '#FFFFFF',
-  },
-  listContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 120,
-    paddingTop: 10,
-  },
+  tagButtonSelected: { backgroundColor: '#F06292', borderColor: '#F06292' },
+  tagText: { fontSize: 14, color: '#E0E0E0', fontWeight: '600' },
+  tagTextSelected: { color: '#FFFFFF' },
+  listContainer: { paddingHorizontal: 16, paddingBottom: 120, paddingTop: 10 },
   card: {
     backgroundColor: '#2E2E2E',
     borderRadius: 14,
@@ -479,45 +372,14 @@ const darkStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4A4A4A',
   },
-  cardPinned: {
-    borderWidth: 2,
-    borderColor: '#F06292',
-    backgroundColor: '#26A69A',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#E0E0E0',
-    flex: 1,
-    marginRight: 8,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionBtn: {
-    padding: 8,
-    marginLeft: 6,
-    borderRadius: 8,
-  },
-  actionEmoji: {
-    fontSize: 18,
-  },
-  cardBody: {
-    marginTop: 8,
-    fontSize: 14,
-    color: '#B0B0B0',
-  },
-  cardTags: {
-    marginTop: 8,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
+  cardPinned: { borderWidth: 2, borderColor: '#F06292', backgroundColor: '#26A69A' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: '#E0E0E0', flex: 1, marginRight: 8 },
+  cardActions: { flexDirection: 'row', alignItems: 'center' },
+  actionBtn: { padding: 8, marginLeft: 6, borderRadius: 8 },
+  actionEmoji: { fontSize: 18 },
+  cardBody: { marginTop: 8, fontSize: 14, color: '#B0B0B0' },
+  cardTags: { marginTop: 8, flexDirection: 'row', flexWrap: 'wrap' },
   cardTag: {
     backgroundColor: '#9575CD',
     borderRadius: 8,
@@ -526,30 +388,12 @@ const darkStyles = StyleSheet.create({
     marginRight: 6,
     marginBottom: 6,
   },
-  cardTagText: {
-    fontSize: 12,
-    color: '#FFFFFF',
-  },
-  cardFooter: {
-    marginTop: 10,
-    alignItems: 'flex-end',
-  },
-  footerText: {
-    fontSize: 11,
-    color: '#757575',
-  },
-  empty: {
-    alignItems: 'center',
-    marginTop: 60,
-  },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  emptyText: {
-    color: '#757575',
-    fontSize: 16,
-  },
+  cardTagText: { fontSize: 12, color: '#FFFFFF' },
+  cardFooter: { marginTop: 10, alignItems: 'flex-end' },
+  footerText: { fontSize: 11, color: '#757575' },
+  empty: { alignItems: 'center', marginTop: 60 },
+  emptyEmoji: { fontSize: 48, marginBottom: 12 },
+  emptyText: { color: '#757575', fontSize: 16 },
   fab: {
     position: 'absolute',
     right: 20,
@@ -565,15 +409,8 @@ const darkStyles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 12,
   },
-  fabText: {
-    color: '#FFF',
-    fontSize: 34,
-    lineHeight: 36,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#1A1A1A',
-  },
+  fabText: { color: '#FFF', fontSize: 34, lineHeight: 36 },
+  modalContainer: { flex: 1, backgroundColor: '#1A1A1A' },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -582,24 +419,10 @@ const darkStyles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 12,
   },
-  modalClose: {
-    fontSize: 22,
-    color: '#F5F5F5',
-  },
-  modalTitle: {
-    fontSize: 18,
-    color: '#F5F5F5',
-    fontWeight: '700',
-  },
-  modalSave: {
-    fontSize: 16,
-    color: '#F06292',
-    fontWeight: '700',
-  },
-  modalBody: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
+  modalClose: { fontSize: 22, color: '#F5F5F5' },
+  modalTitle: { fontSize: 18, color: '#F5F5F5', fontWeight: '700' },
+  modalSave: { fontSize: 16, color: '#F06292', fontWeight: '700' },
+  modalBody: { paddingHorizontal: 16, paddingTop: 8 },
   inputTitle: {
     backgroundColor: '#333333',
     borderRadius: 12,
@@ -647,10 +470,7 @@ const darkStyles = StyleSheet.create({
     borderColor: '#4A4A4A',
     minHeight: 40,
   },
-  pinRow: {
-    marginTop: 12,
-    flexDirection: 'row',
-  },
+  pinRow: { marginTop: 12, flexDirection: 'row' },
   pinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -665,21 +485,9 @@ const darkStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4A4A4A',
   },
-  pinEmoji: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  pinText: {
-    fontSize: 14,
-    color: '#F5F5F5',
-    fontWeight: '600',
-  },
-  // New styles for to-do list
-  typeToggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
+  pinEmoji: { fontSize: 18, marginRight: 8 },
+  pinText: { fontSize: 14, color: '#F5F5F5', fontWeight: '600' },
+  typeToggleContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   typeButton: {
     flex: 1,
     padding: 10,
@@ -690,18 +498,9 @@ const darkStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4A4A4A',
   },
-  typeButtonSelected: {
-    backgroundColor: '#F06292',
-    borderColor: '#F06292',
-  },
-  typeButtonText: {
-    fontSize: 14,
-    color: '#E0E0E0',
-    fontWeight: '600',
-  },
-  typeButtonTextSelected: {
-    color: '#FFFFFF',
-  },
+  typeButtonSelected: { backgroundColor: '#F06292', borderColor: '#F06292' },
+  typeButtonText: { fontSize: 14, color: '#E0E0E0', fontWeight: '600' },
+  typeButtonTextSelected: { color: '#FFFFFF' },
   checklistItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -712,12 +511,7 @@ const darkStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4A4A4A',
   },
-  checklistInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#E0E0E0',
-    paddingVertical: 0,
-  },
+  checklistInput: { flex: 1, fontSize: 15, color: '#E0E0E0', paddingVertical: 0 },
   checklistAddButton: {
     padding: 10,
     backgroundColor: '#F06292',
@@ -725,14 +519,27 @@ const darkStyles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  checklistAddText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  checklistCheckbox: {
+  checklistAddText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
+  checklistCheckbox: { marginRight: 10 },
+  reminderRow: { marginTop: 12, flexDirection: 'row', alignItems: 'center' },
+  reminderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#333333',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    shadowColor: '#000000',
+    shadowOpacity: 0.02,
+    shadowRadius: 6,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#4A4A4A',
     marginRight: 10,
   },
+  reminderText: { fontSize: 14, color: '#F5F5F5', fontWeight: '600' },
+  reminderClearBtn: { padding: 8 },
+  cardReminder: { marginTop: 8, fontSize: 13, color: '#F06292', fontWeight: '600' },
 });
 
 export default function App() {
@@ -742,9 +549,9 @@ export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
   const [theme, setTheme] = useState('light');
+  const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const titleRef = useRef(null);
 
-  // Select styles based on theme
   const styles = theme === 'light' ? lightStyles : darkStyles;
   const placeholderColor = theme === 'light' ? '#9e9e9e' : '#757575';
   const switchTrackColor = {
@@ -754,11 +561,29 @@ export default function App() {
   const switchThumbColor = theme === 'light' ? '#ff6fa3' : '#F06292';
 
   useEffect(() => {
+    setupNotifications();
     loadNotes();
     loadTheme();
+    // Add a test note to ensure cards render
+    setNotes([
+      {
+        id: uid(),
+        title: 'Test Note',
+        body: 'This is a test note to ensure cards render.',
+        tags: ['TEST'],
+        pinned: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        type: 'text',
+        checklist: [],
+        reminder: null,
+        notificationId: null,
+      },
+    ]);
   }, []);
 
   useEffect(() => {
+    console.log('Notes updated:', notes);
     saveNotes();
   }, [notes]);
 
@@ -770,13 +595,15 @@ export default function App() {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
-        // Ensure tags are uppercase and handle new fields
         const loadedNotes = JSON.parse(raw).map((note) => ({
           ...note,
-          type: note.type || 'text', // Default to text for existing notes
+          type: note.type || 'text',
           tags: note.tags ? note.tags.map((tag) => tag.toUpperCase()) : [],
-          checklist: note.checklist || [], // Default to empty array
+          checklist: note.checklist || [],
+          reminder: note.reminder || null,
+          notificationId: note.notificationId || null,
         }));
+        console.log('Loaded notes:', loadedNotes);
         setNotes(loadedNotes);
       }
     } catch (e) {
@@ -827,7 +654,9 @@ export default function App() {
       pinned: false,
       type: 'text',
       checklist: [],
-      newChecklistItem: '', // For adding new checklist items
+      newChecklistItem: '',
+      reminder: null,
+      notificationId: null,
     });
     setModalVisible(true);
     setTimeout(() => titleRef.current && titleRef.current.focus(), 300);
@@ -841,28 +670,41 @@ export default function App() {
       type: note.type || 'text',
       checklist: note.checklist || [],
       newChecklistItem: '',
+      reminder: note.reminder || null,
+      notificationId: note.notificationId || null,
     });
     setModalVisible(true);
     setTimeout(() => titleRef.current && titleRef.current.focus(), 300);
   };
 
-  const saveEditing = () => {
+  const saveEditing = async () => {
     const t = (editingNote.title || '').trim();
     const b = (editingNote.body || '').trim();
     const checklist = editingNote.checklist || [];
-    // Validate: at least title, body (for text notes), or checklist items (for to-do notes)
     if (!t && !b && checklist.length === 0) {
       setModalVisible(false);
       return;
     }
 
-    // Convert tags to uppercase
     const tags = (editingNote.tagsInput || '')
       .split(',')
       .map((tag) => tag.trim().toUpperCase())
       .filter((tag) => tag.length > 0);
 
-    console.log('Saving note with tags:', tags);
+    if (editingNote.notificationId) {
+      await cancelNotification(editingNote.notificationId);
+    }
+
+    let notificationId = null;
+    if (editingNote.reminder) {
+      notificationId = await scheduleNotification({
+        ...editingNote,
+        title: t,
+        body: b,
+        tags,
+        checklist,
+      });
+    }
 
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
@@ -870,7 +712,7 @@ export default function App() {
       setNotes((prev) =>
         prev.map((n) =>
           n.id === editingNote.id
-            ? { ...n, title: t, body: b, tags, checklist, updatedAt: Date.now() }
+            ? { ...n, title: t, body: b, tags, checklist, reminder: editingNote.reminder, notificationId, updatedAt: Date.now() }
             : n
         )
       );
@@ -885,6 +727,8 @@ export default function App() {
         updatedAt: Date.now(),
         type: editingNote.type || 'text',
         checklist,
+        reminder: editingNote.reminder,
+        notificationId,
       };
       setNotes((prev) => [newNote, ...prev]);
     }
@@ -892,13 +736,11 @@ export default function App() {
   };
 
   const togglePin = (id) => {
-    console.log('Toggling pin for id:', id);
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n)));
   };
 
   const confirmDelete = (id) => {
-    console.log('confirmDelete called with id:', id);
     Alert.alert(
       'Delete Note',
       'Are you sure you want to delete this note?',
@@ -907,27 +749,22 @@ export default function App() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            console.log('Delete pressed for id:', id);
-            deleteNote(id);
-          },
+          onPress: () => deleteNote(id),
         },
       ],
       { cancelable: true }
     );
   };
 
-  const deleteNote = (id) => {
-    console.log('deleteNote called with id:', id);
+  const deleteNote = async (id) => {
+    const note = notes.find((n) => n.id === id);
+    if (note && note.notificationId) {
+      await cancelNotification(note.notificationId);
+    }
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setNotes((prev) => {
-      const updatedNotes = prev.filter((n) => n.id !== id);
-      console.log('Updated notes:', updatedNotes);
-      return updatedNotes;
-    });
+    setNotes((prev) => prev.filter((n) => n.id !== id));
   };
 
-  // Function to share a note
   const shareNote = async (note) => {
     try {
       const title = note.title || 'Untitled';
@@ -939,16 +776,16 @@ export default function App() {
       } else {
         message += note.body || 'No content';
       }
-      await Share.share({
-        message,
-      });
+      if (note.reminder) {
+        message += `\n\nReminder: ${new Date(note.reminder).toLocaleString()}`;
+      }
+      await Share.share({ message });
     } catch (error) {
       console.warn('Error sharing note:', error);
       Alert.alert('Error', 'Failed to share the note. Please try again.');
     }
   };
 
-  // Get unique tags from notes, ensuring uppercase
   const getTags = () => {
     const allTags = notes.reduce((acc, note) => {
       if (note.tags && note.tags.length > 0) {
@@ -964,7 +801,6 @@ export default function App() {
     return ['ALL', ...allTags.sort()];
   };
 
-  // To-do list functions
   const addChecklistItem = () => {
     const text = (editingNote.newChecklistItem || '').trim();
     if (!text) return;
@@ -1000,15 +836,22 @@ export default function App() {
     }));
   };
 
+  const handleReminderConfirm = (date) => {
+    setEditingNote((prev) => ({ ...prev, reminder: date.getTime() }));
+    setDatePickerVisible(false);
+  };
+
+  const clearReminder = () => {
+    setEditingNote((prev) => ({ ...prev, reminder: null, notificationId: null }));
+  };
+
   const tags = getTags();
 
   const filtered = notes
     .filter((n) => {
-      // Apply tag filter
       if (selectedTag !== 'ALL' && (!n.tags || !n.tags.includes(selectedTag))) {
         return false;
       }
-      // Apply search query filter
       if (!query) return true;
       const q = query.toLowerCase();
       if (n.type === 'todo' && n.checklist && n.checklist.length > 0) {
@@ -1030,86 +873,84 @@ export default function App() {
       return b.updatedAt - a.updatedAt;
     });
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity activeOpacity={0.9} onPress={() => openEditNote(item)}>
-      <View style={[styles.card, item.pinned ? styles.cardPinned : null]}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {item.title || 'Untitled'}
-          </Text>
-          <View style={styles.cardActions}>
-            <TouchableOpacity
-              onPress={() => togglePin(item.id)}
-              style={styles.actionBtn}
-              testID={`pin-button-${item.id}`}
-            >
-              <Text style={styles.actionEmoji}>{item.pinned ? '📌' : '📍'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={(e) => {
-                e.stopPropagation();
-                shareNote(item);
-              }}
-              style={styles.actionBtn}
-              testID={`share-button-${item.id}`}
-            >
-              <MaterialIcons
-                name="share"
-                size={18}
-                color={theme === 'light' ? '#4a2b4a' : '#E0E0E0'}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={(e) => {
-                e.stopPropagation();
-                confirmDelete(item.id);
-              }}
-              style={styles.actionBtn}
-              testID={`delete-button-${item.id}`}
-            >
-              <Text style={styles.actionEmoji}>🗑️</Text>
-            </TouchableOpacity>
+  const renderItem = ({ item }) => {
+    console.log('Rendering note:', item); // Debug log
+    return (
+      <TouchableOpacity activeOpacity={0.9} onPress={() => openEditNote(item)}>
+        <View style={[styles.card, item.pinned ? styles.cardPinned : null]}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              {item.title || 'Untitled'}
+            </Text>
+            <View style={styles.cardActions}>
+              <TouchableOpacity onPress={() => togglePin(item.id)} style={styles.actionBtn}>
+                <Text style={styles.actionEmoji}>{item.pinned ? '📌' : '📍'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  shareNote(item);
+                }}
+                style={styles.actionBtn}
+              >
+                <MaterialIcons name="share" size={18} color={theme === 'light' ? '#4a2b4a' : '#E0E0E0'} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  confirmDelete(item.id);
+                }}
+                style={styles.actionBtn}
+              >
+                <Text style={styles.actionEmoji}>🗑️</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          {item.type === 'todo' && item.checklist && item.checklist.length > 0 ? (
+            <View style={{ marginTop: 8 }}>
+              {item.checklist.slice(0, 3).map((todo, index) => (
+                <View key={index} style={styles.checklistItem}>
+                  <Text style={styles.checklistCheckbox}>{todo.completed ? '✅' : '⬜'}</Text>
+                  <Text
+                    style={[styles.cardBody, todo.completed && { textDecorationLine: 'line-through' }]}
+                    numberOfLines={1}
+                  >
+                    {todo.text}
+                  </Text>
+                </View>
+              ))}
+              {item.checklist.length > 3 && (
+                <Text style={styles.cardBody}>...and {item.checklist.length - 3} more</Text>
+              )}
+            </View>
+          ) : (
+            <Text style={styles.cardBody} numberOfLines={3}>
+              {item.body || 'No content yet. Tap to edit.'}
+            </Text>
+          )}
+          {item.reminder && (
+            <Text style={styles.cardReminder}>
+              Reminder: {new Date(item.reminder).toLocaleString()}
+            </Text>
+          )}
+          {item.tags && item.tags.length > 0 && (
+            <View style={styles.cardTags}>
+              {item.tags.map((tag, index) => (
+                <View key={index} style={styles.cardTag}>
+                  <Text style={styles.cardTagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+          <View style={styles.cardFooter}>
+            <Text style={styles.footerText}>
+              {new Date(item.updatedAt || item.createdAt).toLocaleString()}
+            </Text>
           </View>
         </View>
-        {item.type === 'todo' && item.checklist && item.checklist.length > 0 ? (
-          <View style={{ marginTop: 8 }}>
-            {item.checklist.slice(0, 3).map((todo, index) => (
-              <View key={index} style={styles.checklistItem}>
-                <Text style={styles.checklistCheckbox}>{todo.completed ? '✅' : '⬜'}</Text>
-                <Text
-                  style={[styles.cardBody, todo.completed && { textDecorationLine: 'line-through' }]}
-                  numberOfLines={1}
-                >
-                  {todo.text}
-                </Text>
-              </View>
-            ))}
-            {item.checklist.length > 3 && (
-              <Text style={styles.cardBody}>...and {item.checklist.length - 3} more</Text>
-            )}
-          </View>
-        ) : (
-          <Text style={styles.cardBody} numberOfLines={3}>
-            {item.body || 'No content yet. Tap to edit.'}
-          </Text>
-        )}
-        {item.tags && item.tags.length > 0 && (
-          <View style={styles.cardTags}>
-            {item.tags.map((tag, index) => (
-              <View key={index} style={styles.cardTag}>
-                <Text style={styles.cardTagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-        <View style={styles.cardFooter}>
-          <Text style={styles.footerText}>
-            {new Date(item.updatedAt || item.createdAt).toLocaleString()}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const renderTag = ({ item }) => (
     <TouchableOpacity
@@ -1124,10 +965,7 @@ export default function App() {
 
   const renderChecklistItem = ({ item, index }) => (
     <View style={styles.checklistItem}>
-      <TouchableOpacity
-        onPress={() => toggleChecklistItem(item.id)}
-        style={styles.checklistCheckbox}
-      >
+      <TouchableOpacity onPress={() => toggleChecklistItem(item.id)} style={styles.checklistCheckbox}>
         <Text>{item.completed ? '✅' : '⬜'}</Text>
       </TouchableOpacity>
       <TextInput
@@ -1137,10 +975,7 @@ export default function App() {
         placeholder="Enter task..."
         placeholderTextColor={placeholderColor}
       />
-      <TouchableOpacity
-        onPress={() => deleteChecklistItem(item.id)}
-        style={{ padding: 5 }}
-      >
+      <TouchableOpacity onPress={() => deleteChecklistItem(item.id)} style={{ padding: 5 }}>
         <Text style={styles.actionEmoji}>🗑️</Text>
       </TouchableOpacity>
     </View>
@@ -1225,33 +1060,21 @@ export default function App() {
             />
             <View style={styles.typeToggleContainer}>
               <TouchableOpacity
-                style={[
-                  styles.typeButton,
-                  editingNote && editingNote.type === 'text' ? styles.typeButtonSelected : null,
-                ]}
+                style={[styles.typeButton, editingNote && editingNote.type === 'text' ? styles.typeButtonSelected : null]}
                 onPress={() => setEditingNote((s) => ({ ...s, type: 'text', checklist: [] }))}
               >
                 <Text
-                  style={[
-                    styles.typeButtonText,
-                    editingNote && editingNote.type === 'text' ? styles.typeButtonTextSelected : null,
-                  ]}
+                  style={[styles.typeButtonText, editingNote && editingNote.type === 'text' ? styles.typeButtonTextSelected : null]}
                 >
                   Text Note
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[
-                  styles.typeButton,
-                  editingNote && editingNote.type === 'todo' ? styles.typeButtonSelected : null,
-                ]}
+                style={[styles.typeButton, editingNote && editingNote.type === 'todo' ? styles.typeButtonSelected : null]}
                 onPress={() => setEditingNote((s) => ({ ...s, type: 'todo', body: '' }))}
               >
                 <Text
-                  style={[
-                    styles.typeButtonText,
-                    editingNote && editingNote.type === 'todo' ? styles.typeButtonTextSelected : null,
-                  ]}
+                  style={[styles.typeButtonText, editingNote && editingNote.type === 'todo' ? styles.typeButtonTextSelected : null]}
                 >
                   To-Do List
                 </Text>
@@ -1296,10 +1119,7 @@ export default function App() {
               placeholderTextColor={placeholderColor}
               style={styles.inputTags}
               value={editingNote ? editingNote.tagsInput : ''}
-              onChangeText={(t) => {
-                console.log('Tags input changed:', t);
-                setEditingNote((s) => ({ ...s, tagsInput: t }));
-              }}
+              onChangeText={(t) => setEditingNote((s) => ({ ...s, tagsInput: t }))}
               returnKeyType="done"
             />
             <View style={styles.pinRow}>
@@ -1311,7 +1131,29 @@ export default function App() {
                 <Text style={styles.pinText}>{editingNote && editingNote.pinned ? 'Pinned' : 'Pin'}</Text>
               </TouchableOpacity>
             </View>
+            <View style={styles.reminderRow}>
+              <TouchableOpacity onPress={() => setDatePickerVisible(true)} style={styles.reminderBtn}>
+                <Text style={styles.pinEmoji}>🔔</Text>
+                <Text style={styles.reminderText}>
+                  {editingNote && editingNote.reminder
+                    ? `Reminder: ${new Date(editingNote.reminder).toLocaleString()}`
+                    : 'Set Reminder'}
+                </Text>
+              </TouchableOpacity>
+              {editingNote && editingNote.reminder && (
+                <TouchableOpacity onPress={clearReminder} style={styles.reminderClearBtn}>
+                  <Text style={styles.actionEmoji}>🗑️</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
+          <DateTimePickerModal
+            isVisible={isDatePickerVisible}
+            mode="datetime"
+            onConfirm={handleReminderConfirm}
+            onCancel={() => setDatePickerVisible(false)}
+            minimumDate={new Date()}
+          />
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
