@@ -16,6 +16,7 @@ import {
   Switch,
   Share,
   ScrollView,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -638,6 +639,73 @@ const createStyles = (c) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.border,
   },
+  actionModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  actionModalContent: {
+    backgroundColor: c.secondaryBg,
+    borderRadius: 14,
+    padding: 16,
+    width: '80%',
+    shadowColor: c.shadow,
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 6,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: c.border,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  actionModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: c.headerText,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  actionModalButton: {
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: c.accentLight,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: c.accent,
+  },
+  actionModalButtonText: {
+    fontSize: 16,
+    color: c.headerText,
+    fontWeight: '600',
+  },
+  actionModalDeleteButton: {
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: c.accentLight,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: c.accent,
+  },
+  actionModalDeleteButtonText: {
+    fontSize: 16,
+    color: '#FF0000',
+    fontWeight: '600',
+  },
+  actionModalCancelButton: {
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: c.secondaryBg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  actionModalCancelButtonText: {
+    fontSize: 16,
+    color: c.primaryText,
+    fontWeight: '600',
+  },
 });
 
 function MainApp() {
@@ -646,6 +714,8 @@ function MainApp() {
   const [selectedTag, setSelectedTag] = useState('ALL');
   const [modalVisible, setModalVisible] = useState(false);
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+  const [actionModalVisible, setActionModalVisible] = useState(false);
+  const [selectedNote, setSelectedNote] = useState(null);
   const [editingNote, setEditingNote] = useState(null);
   const [mode, setMode] = useState('light');
   const [palette, setPalette] = useState('default');
@@ -913,30 +983,8 @@ function MainApp() {
   };
 
   const showActionMenu = (item) => {
-    Alert.alert(
-      'Note Actions',
-      '',
-      [
-        {
-          text: item.pinned ? 'Unpin' : 'Pin',
-          onPress: () => togglePin(item.id),
-        },
-        {
-          text: 'Share',
-          onPress: () => shareNote(item),
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => confirmDelete(item.id),
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-      ],
-      { cancelable: true }
-    );
+    setSelectedNote(item);
+    setActionModalVisible(true);
   };
 
   const getTags = () => {
@@ -1353,6 +1401,52 @@ function MainApp() {
               </View>
             </View>
           </SafeAreaView>
+        </Modal>
+        <Modal
+          visible={actionModalVisible}
+          onRequestClose={() => setActionModalVisible(false)}
+          animationType="fade"
+          transparent={true}
+        >
+          <TouchableWithoutFeedback onPress={() => setActionModalVisible(false)}>
+            <View style={styles.actionModalOverlay}>
+              <TouchableWithoutFeedback onPress={() => {}}>
+                <View style={styles.actionModalContent}>
+                  {selectedNote && (
+                    <>
+                      <TouchableOpacity
+                        style={styles.actionModalButton}
+                        onPress={() => {
+                          togglePin(selectedNote.id);
+                          setActionModalVisible(false);
+                        }}
+                      >
+                        <MaterialIcons name="push-pin" size={24} color={themeColors.headerText} style={selectedNote.pinned ? { transform: [{ rotate: '45deg' }] } : null} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.actionModalButton}
+                        onPress={() => {
+                          shareNote(selectedNote);
+                          setActionModalVisible(false);
+                        }}
+                      >
+                        <MaterialIcons name="share" size={24} color={themeColors.headerText} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.actionModalDeleteButton}
+                        onPress={() => {
+                          setActionModalVisible(false);
+                          confirmDelete(selectedNote.id);
+                        }}
+                      >
+                        <MaterialIcons name="delete" size={24} color="#FF0000" />
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
         </Modal>
       </View>
     </>
