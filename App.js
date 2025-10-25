@@ -404,8 +404,22 @@ const createStyles = (c) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.border,
   },
-  themeToggle: { marginLeft: 12, flexDirection: 'row', alignItems: 'center' },
-  themeLabel: { fontSize: 14, marginRight: 8, color: c.secondaryText },
+  themeToggle: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    backgroundColor: c.secondaryBg,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    shadowColor: c.shadow,
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  themeLabel: { fontSize: 16, marginRight: 8, color: c.primaryText, fontWeight: '600' },
   tagsContainer: { marginTop: 10, marginBottom: 10 },
   tagButton: {
     backgroundColor: c.secondaryBg,
@@ -480,7 +494,7 @@ const createStyles = (c) => StyleSheet.create({
     paddingBottom: 12,
   },
   modalClose: { fontSize: 22, color: c.modalClose },
-  modalTitle: { fontSize: 18, color: c.headerText, fontWeight: '700' },
+  modalTitle: { fontSize: 28, color: c.headerText, fontWeight: '700' },
   modalSave: { fontSize: 16, color: c.accent, fontWeight: '700' },
   modalBody: { paddingHorizontal: 16, paddingTop: 8 },
   inputTitle: {
@@ -612,6 +626,16 @@ const createStyles = (c) => StyleSheet.create({
     backgroundColor: c.primaryBg,
     borderTopWidth: 1,
     borderTopColor: c.border,
+  },
+  pickerContainer: {
+    backgroundColor: c.secondaryBg,
+    borderRadius: 12,
+    shadowColor: c.shadow,
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: c.border,
   },
 });
 
@@ -1309,12 +1333,12 @@ function MainApp() {
               <TouchableOpacity onPress={() => setSettingsModalVisible(false)}>
                 <Text style={styles.modalClose}>✕</Text>
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>Settings</Text>
+              <Text style={styles.modalTitle}>⚙️ Settings</Text>
               <View />
             </View>
             <View style={styles.modalBody}>
               <View style={styles.themeToggle}>
-                <Text style={styles.themeLabel}>{mode === 'light' ? '☀️ Light' : '🌙 Dark'}</Text>
+                <Text style={styles.themeLabel}>{mode === 'light' ? '☀️ Light Mode' : '🌙 Dark Mode'}</Text>
                 <Switch
                   value={mode === 'dark'}
                   onValueChange={toggleMode}
@@ -1324,18 +1348,20 @@ function MainApp() {
               </View>
               <View style={{ marginTop: 20 }}>
                 <Text style={styles.themeLabel}>Color Palette</Text>
-                <Picker
-                  selectedValue={palette}
-                  onValueChange={(itemValue) => setPalette(itemValue)}
-                  style={{ color: themeColors.primaryText }}
-                >
-                  <Picker.Item label="Default" value="default" />
-                  <Picker.Item label="Pastel Blue" value="blue" />
-                  <Picker.Item label="Pastel Green" value="green" />
-                  <Picker.Item label="Pastel Yellow" value="yellow" />
-                  <Picker.Item label="Pastel Purple" value="purple" />
-                  <Picker.Item label="Pastel Orange" value="orange" />
-                </Picker>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={palette}
+                    onValueChange={(itemValue) => setPalette(itemValue)}
+                    style={{ color: themeColors.primaryText }}
+                  >
+                    <Picker.Item label="Default" value="default" />
+                    <Picker.Item label="Pastel Blue" value="blue" />
+                    <Picker.Item label="Pastel Green" value="green" />
+                    <Picker.Item label="Pastel Yellow" value="yellow" />
+                    <Picker.Item label="Pastel Purple" value="purple" />
+                    <Picker.Item label="Pastel Orange" value="orange" />
+                  </Picker>
+                </View>
               </View>
             </View>
           </SafeAreaView>
