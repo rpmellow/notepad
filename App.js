@@ -15,6 +15,7 @@ import {
   Alert,
   Switch,
   Share,
+  ScrollView,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -650,8 +651,7 @@ function MainApp() {
   const [palette, setPalette] = useState('default');
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const titleRef = useRef(null);
-  const leftRef = useRef(null);
-  const rightRef = useRef(null);
+  const scrollRef = useRef(null);
   const insets = useSafeAreaInsets();
 
   const currentTheme = `${palette}-${mode}`;
@@ -1159,42 +1159,30 @@ function MainApp() {
             ListEmptyComponent={<Text style={styles.tagText}>No tags yet</Text>}
           />
         </View>
-
-        {filtered.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>📝</Text>
-            <Text style={styles.emptyText}>No notes yet — tap + to add one!</Text>
-          </View>
-        ) : (
-          <View style={styles.listContainer}>
-            <View style={{ flexDirection: 'row' }}>
-              <View style={{ flex: 1, marginRight: 4 }}>
-                <FlatList
-                  ref={leftRef}
-                  data={leftNotes}
-                  keyExtractor={(it) => it.id}
-                  renderItem={renderItem}
-                  contentContainerStyle={{ paddingBottom: 60 + insets.bottom + 20 }}
-                />
-              </View>
-              <View style={{ flex: 1, marginLeft: 4 }}>
-                <FlatList
-                  ref={rightRef}
-                  data={rightNotes}
-                  keyExtractor={(it) => it.id}
-                  renderItem={renderItem}
-                  contentContainerStyle={{ paddingBottom: 60 + insets.bottom + 20 }}
-                />
+        <ScrollView style={{flex: 1}} contentContainerStyle={{flexGrow: 1}} ref={scrollRef}>
+          {filtered.length === 0 ? (
+            <View style={[styles.empty, {flexGrow: 1, justifyContent: 'center'}]}>
+              <Text style={styles.emptyEmoji}>📝</Text>
+              <Text style={styles.emptyText}>No notes yet — tap + to add one!</Text>
+            </View>
+          ) : (
+            <View style={styles.listContainer}>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={{ flex: 1, marginRight: 4, paddingBottom: 60 + insets.bottom + 20 }}>
+                  {leftNotes.map(item => renderItem({item}))}
+                </View>
+                <View style={{ flex: 1, marginLeft: 4, paddingBottom: 60 + insets.bottom + 20 }}>
+                  {rightNotes.map(item => renderItem({item}))}
+                </View>
               </View>
             </View>
-          </View>
-        )}
+          )}
+        </ScrollView>
 
         <View style={[styles.bottomBar, { height: 60 + insets.bottom }]}>
           <View style={{ flex: 1, height: 60, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }}>
             <TouchableOpacity onPress={() => {
-              leftRef.current?.scrollToOffset({ animated: true, offset: 0 });
-              rightRef.current?.scrollToOffset({ animated: true, offset: 0 });
+              scrollRef.current?.scrollTo({ animated: true, y: 0 });
             }}>
               <MaterialIcons name="home" size={28} color={iconColor} />
             </TouchableOpacity>
