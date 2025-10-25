@@ -1011,7 +1011,7 @@ function MainApp() {
       <TouchableOpacity style={{ marginBottom: 8 }} activeOpacity={0.9} onPress={() => openEditNote(item)}>
         <View style={[styles.card, item.pinned ? styles.cardPinned : null]}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle} numberOfLines={1}>
+            <Text style={styles.cardTitle} numberOfLines={2} ellipsizeMode="tail">
               {item.title || 'Untitled'}
             </Text>
             <View style={styles.cardActions}>
