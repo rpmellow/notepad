@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as Notifications from 'expo-notifications';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -418,7 +419,7 @@ const createStyles = (c) => StyleSheet.create({
   tagButtonSelected: { backgroundColor: c.accentLight, borderColor: c.accent },
   tagText: { fontSize: 14, color: c.primaryText, fontWeight: '600' },
   tagTextSelected: { color: c.headerText },
-  listContainer: { paddingHorizontal: 8, paddingBottom: 80, paddingTop: 10 },
+  listContainer: { paddingHorizontal: 8, paddingTop: 10 },
   card: {
     backgroundColor: c.secondaryBg,
     borderRadius: 14,
@@ -614,7 +615,7 @@ const createStyles = (c) => StyleSheet.create({
   },
 });
 
-export default function App() {
+function MainApp() {
   const [notes, setNotes] = useState([]);
   const [query, setQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('ALL');
@@ -625,7 +626,9 @@ export default function App() {
   const [palette, setPalette] = useState('default');
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const titleRef = useRef(null);
-  const listRef = useRef(null);
+  const leftRef = useRef(null);
+  const rightRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   const currentTheme = `${palette}-${mode}`;
   const themeColors = colors[currentTheme];
@@ -999,10 +1002,13 @@ export default function App() {
       return b.updatedAt - a.updatedAt;
     });
 
-  const renderItem = ({ item, index }) => {
+  const leftNotes = filtered.filter((_, index) => index % 2 === 0);
+  const rightNotes = filtered.filter((_, index) => index % 2 === 1);
+
+  const renderItem = ({ item }) => {
     console.log('Rendering note:', item); // Debug log
     return (
-      <TouchableOpacity style={{ flex: 1, ...(index % 2 === 0 ? { marginRight: 4 } : { marginLeft: 4 }), marginBottom: 8 }} activeOpacity={0.9} onPress={() => openEditNote(item)}>
+      <TouchableOpacity style={{ marginBottom: 8 }} activeOpacity={0.9} onPress={() => openEditNote(item)}>
         <View style={[styles.card, item.pinned ? styles.cardPinned : null]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle} numberOfLines={1}>
@@ -1101,218 +1107,248 @@ export default function App() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <>
       <StatusBar
         barStyle={mode === 'light' ? 'dark-content' : 'light-content'}
         backgroundColor="transparent"
         translucent
       />
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>🌸 {getGreeting()}</Text>
-        <View style={styles.headerRow}>
-          <TextInput
-            placeholder="Search notes..."
-            placeholderTextColor={placeholderColor}
-            style={styles.search}
-            value={query}
-            onChangeText={setQuery}
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: 24 + insets.top }]}>
+          <Text style={styles.headerTitle}>🌸 {getGreeting()}</Text>
+          <View style={styles.headerRow}>
+            <TextInput
+              placeholder="Search notes..."
+              placeholderTextColor={placeholderColor}
+              style={styles.search}
+              value={query}
+              onChangeText={setQuery}
+            />
+          </View>
+          <FlatList
+            data={tags}
+            renderItem={renderTag}
+            keyExtractor={(item) => item}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.tagsContainer}
+            ListEmptyComponent={<Text style={styles.tagText}>No tags yet</Text>}
           />
         </View>
-        <FlatList
-          data={tags}
-          renderItem={renderTag}
-          keyExtractor={(item) => item}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.tagsContainer}
-          ListEmptyComponent={<Text style={styles.tagText}>No tags yet</Text>}
-        />
-      </View>
 
-      <FlatList
-        ref={listRef}
-        data={filtered}
-        keyExtractor={(it) => it.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContainer}
-        numColumns={2}
-        ListEmptyComponent={
+        {filtered.length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyEmoji}>📝</Text>
             <Text style={styles.emptyText}>No notes yet — tap + to add one!</Text>
           </View>
-        }
-      />
+        ) : (
+          <View style={styles.listContainer}>
+            <View style={{ flexDirection: 'row' }}>
+              <View style={{ flex: 1, marginRight: 4 }}>
+                <FlatList
+                  ref={leftRef}
+                  data={leftNotes}
+                  keyExtractor={(it) => it.id}
+                  renderItem={renderItem}
+                  contentContainerStyle={{ paddingBottom: 60 + insets.bottom + 20 }}
+                />
+              </View>
+              <View style={{ flex: 1, marginLeft: 4 }}>
+                <FlatList
+                  ref={rightRef}
+                  data={rightNotes}
+                  keyExtractor={(it) => it.id}
+                  renderItem={renderItem}
+                  contentContainerStyle={{ paddingBottom: 60 + insets.bottom + 20 }}
+                />
+              </View>
+            </View>
+          </View>
+        )}
 
-      <View style={styles.bottomBar}>
-        <TouchableOpacity onPress={() => listRef.current?.scrollToOffset({ animated: true, offset: 0 })}>
-          <MaterialIcons name="home" size={28} color={iconColor} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={openNewNote}>
-          <MaterialIcons name="add" size={28} color={iconColor} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setSettingsModalVisible(true)}>
-          <MaterialIcons name="settings" size={28} color={iconColor} />
-        </TouchableOpacity>
-      </View>
-
-      <Modal animationType="slide" visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={styles.modalClose}>✕</Text>
+        <View style={[styles.bottomBar, { height: 60 + insets.bottom }]}>
+          <View style={{ flex: 1, height: 60, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => {
+              leftRef.current?.scrollToOffset({ animated: true, offset: 0 });
+              rightRef.current?.scrollToOffset({ animated: true, offset: 0 });
+            }}>
+              <MaterialIcons name="home" size={28} color={iconColor} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>{editingNote && editingNote.id ? 'Edit Note' : 'New Note'}</Text>
-            <TouchableOpacity onPress={saveEditing}>
-              <Text style={styles.modalSave}>Save</Text>
+            <TouchableOpacity onPress={openNewNote}>
+              <MaterialIcons name="add" size={28} color={iconColor} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setSettingsModalVisible(true)}>
+              <MaterialIcons name="settings" size={28} color={iconColor} />
             </TouchableOpacity>
           </View>
+        </View>
 
-          <View style={styles.modalBody}>
-            <TextInput
-              ref={titleRef}
-              placeholder="Title"
-              placeholderTextColor={placeholderColor}
-              style={styles.inputTitle}
-              value={editingNote ? editingNote.title : ''}
-              onChangeText={(t) => setEditingNote((s) => ({ ...s, title: t }))}
-              returnKeyType="next"
-            />
-            <View style={styles.typeToggleContainer}>
-              <TouchableOpacity
-                style={[styles.typeButton, editingNote && editingNote.type === 'text' ? styles.typeButtonSelected : null]}
-                onPress={() => setEditingNote((s) => ({ ...s, type: 'text', checklist: [] }))}
-              >
-                <Text
-                  style={[styles.typeButtonText, editingNote && editingNote.type === 'text' ? styles.typeButtonTextSelected : null]}
-                >
-                  Text Note
-                </Text>
+        <Modal animationType="slide" visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Text style={styles.modalClose}>✕</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.typeButton, editingNote && editingNote.type === 'todo' ? styles.typeButtonSelected : null]}
-                onPress={() => setEditingNote((s) => ({ ...s, type: 'todo', body: '' }))}
-              >
-                <Text
-                  style={[styles.typeButtonText, editingNote && editingNote.type === 'todo' ? styles.typeButtonTextSelected : null]}
-                >
-                  To-Do List
-                </Text>
+              <Text style={styles.modalTitle}>{editingNote && editingNote.id ? 'Edit Note' : 'New Note'}</Text>
+              <TouchableOpacity onPress={saveEditing}>
+                <Text style={styles.modalSave}>Save</Text>
               </TouchableOpacity>
             </View>
-            {editingNote && editingNote.type === 'todo' ? (
-              <>
-                <FlatList
-                  data={editingNote.checklist}
-                  renderItem={renderChecklistItem}
-                  keyExtractor={(item) => item.id}
-                  style={{ maxHeight: 200 }}
-                />
-                <View style={styles.checklistItem}>
-                  <TextInput
-                    style={styles.checklistInput}
-                    value={editingNote.newChecklistItem || ''}
-                    onChangeText={(t) => setEditingNote((s) => ({ ...s, newChecklistItem: t }))}
-                    placeholder="Add new task..."
-                    placeholderTextColor={placeholderColor}
-                    onSubmitEditing={addChecklistItem}
-                    returnKeyType="done"
-                  />
-                </View>
-                <TouchableOpacity style={styles.checklistAddButton} onPress={addChecklistItem}>
-                  <Text style={styles.checklistAddText}>Add Task</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
+
+            <View style={styles.modalBody}>
               <TextInput
-                placeholder="Write something cute..."
+                ref={titleRef}
+                placeholder="Title"
                 placeholderTextColor={placeholderColor}
-                style={styles.inputBody}
-                value={editingNote ? editingNote.body : ''}
-                onChangeText={(t) => setEditingNote((s) => ({ ...s, body: t }))}
-                multiline
+                style={styles.inputTitle}
+                value={editingNote ? editingNote.title : ''}
+                onChangeText={(t) => setEditingNote((s) => ({ ...s, title: t }))}
                 returnKeyType="next"
               />
-            )}
-            <TextInput
-              placeholder="Tags (comma-separated, e.g., WORK, PERSONAL)"
-              placeholderTextColor={placeholderColor}
-              style={styles.inputTags}
-              value={editingNote ? editingNote.tagsInput : ''}
-              onChangeText={(t) => setEditingNote((s) => ({ ...s, tagsInput: t }))}
-              returnKeyType="done"
-            />
-            <View style={styles.pinRow}>
-              <TouchableOpacity
-                onPress={() => setEditingNote((s) => ({ ...s, pinned: !s.pinned }))}
-                style={styles.pinBtn}
-              >
-                <Text style={styles.pinEmoji}>{editingNote && editingNote.pinned ? '📌' : '📍'}</Text>
-                <Text style={styles.pinText}>{editingNote && editingNote.pinned ? 'Pinned' : 'Pin'}</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.reminderRow}>
-              <TouchableOpacity onPress={() => setDatePickerVisible(true)} style={styles.reminderBtn}>
-                <Text style={styles.pinEmoji}>🔔</Text>
-                <Text style={styles.reminderText}>
-                  {editingNote && editingNote.reminder
-                    ? `Reminder: ${new Date(editingNote.reminder).toLocaleString()}`
-                    : 'Set Reminder'}
-                </Text>
-              </TouchableOpacity>
-              {editingNote && editingNote.reminder && (
-                <TouchableOpacity onPress={clearReminder} style={styles.reminderClearBtn}>
-                  <Text style={styles.actionEmoji}>🗑️</Text>
+              <View style={styles.typeToggleContainer}>
+                <TouchableOpacity
+                  style={[styles.typeButton, editingNote && editingNote.type === 'text' ? styles.typeButtonSelected : null]}
+                  onPress={() => setEditingNote((s) => ({ ...s, type: 'text', checklist: [] }))}
+                >
+                  <Text
+                    style={[styles.typeButtonText, editingNote && editingNote.type === 'text' ? styles.typeButtonTextSelected : null]}
+                  >
+                    Text Note
+                  </Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.typeButton, editingNote && editingNote.type === 'todo' ? styles.typeButtonSelected : null]}
+                  onPress={() => setEditingNote((s) => ({ ...s, type: 'todo', body: '' }))}
+                >
+                  <Text
+                    style={[styles.typeButtonText, editingNote && editingNote.type === 'todo' ? styles.typeButtonTextSelected : null]}
+                  >
+                    To-Do List
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {editingNote && editingNote.type === 'todo' ? (
+                <>
+                  <FlatList
+                    data={editingNote.checklist}
+                    renderItem={renderChecklistItem}
+                    keyExtractor={(item) => item.id}
+                    style={{ maxHeight: 200 }}
+                  />
+                  <View style={styles.checklistItem}>
+                    <TextInput
+                      style={styles.checklistInput}
+                      value={editingNote.newChecklistItem || ''}
+                      onChangeText={(t) => setEditingNote((s) => ({ ...s, newChecklistItem: t }))}
+                      placeholder="Add new task..."
+                      placeholderTextColor={placeholderColor}
+                      onSubmitEditing={addChecklistItem}
+                      returnKeyType="done"
+                    />
+                  </View>
+                  <TouchableOpacity style={styles.checklistAddButton} onPress={addChecklistItem}>
+                    <Text style={styles.checklistAddText}>Add Task</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <TextInput
+                  placeholder="Write something cute..."
+                  placeholderTextColor={placeholderColor}
+                  style={styles.inputBody}
+                  value={editingNote ? editingNote.body : ''}
+                  onChangeText={(t) => setEditingNote((s) => ({ ...s, body: t }))}
+                  multiline
+                  returnKeyType="next"
+                />
               )}
-            </View>
-          </View>
-          <DateTimePickerModal
-            isVisible={isDatePickerVisible}
-            mode="datetime"
-            onConfirm={handleReminderConfirm}
-            onCancel={() => setDatePickerVisible(false)}
-            minimumDate={new Date()}
-          />
-        </SafeAreaView>
-      </Modal>
-      <Modal animationType="slide" visible={settingsModalVisible} onRequestClose={() => setSettingsModalVisible(false)}>
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setSettingsModalVisible(false)}>
-              <Text style={styles.modalClose}>✕</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Settings</Text>
-            <View />
-          </View>
-          <View style={styles.modalBody}>
-            <View style={styles.themeToggle}>
-              <Text style={styles.themeLabel}>{mode === 'light' ? '☀️ Light' : '🌙 Dark'}</Text>
-              <Switch
-                value={mode === 'dark'}
-                onValueChange={toggleMode}
-                trackColor={switchTrackColor}
-                thumbColor={switchThumbColor}
+              <TextInput
+                placeholder="Tags (comma-separated, e.g., WORK, PERSONAL)"
+                placeholderTextColor={placeholderColor}
+                style={styles.inputTags}
+                value={editingNote ? editingNote.tagsInput : ''}
+                onChangeText={(t) => setEditingNote((s) => ({ ...s, tagsInput: t }))}
+                returnKeyType="done"
               />
+              <View style={styles.pinRow}>
+                <TouchableOpacity
+                  onPress={() => setEditingNote((s) => ({ ...s, pinned: !s.pinned }))}
+                  style={styles.pinBtn}
+                >
+                  <Text style={styles.pinEmoji}>{editingNote && editingNote.pinned ? '📌' : '📍'}</Text>
+                  <Text style={styles.pinText}>{editingNote && editingNote.pinned ? 'Pinned' : 'Pin'}</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.reminderRow}>
+                <TouchableOpacity onPress={() => setDatePickerVisible(true)} style={styles.reminderBtn}>
+                  <Text style={styles.pinEmoji}>🔔</Text>
+                  <Text style={styles.reminderText}>
+                    {editingNote && editingNote.reminder
+                      ? `Reminder: ${new Date(editingNote.reminder).toLocaleString()}`
+                      : 'Set Reminder'}
+                  </Text>
+                </TouchableOpacity>
+                {editingNote && editingNote.reminder && (
+                  <TouchableOpacity onPress={clearReminder} style={styles.reminderClearBtn}>
+                    <Text style={styles.actionEmoji}>🗑️</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
-            <View style={{ marginTop: 20 }}>
-              <Text style={styles.themeLabel}>Color Palette</Text>
-              <Picker
-                selectedValue={palette}
-                onValueChange={(itemValue) => setPalette(itemValue)}
-                style={{ color: themeColors.primaryText }}
-              >
-                <Picker.Item label="Default" value="default" />
-                <Picker.Item label="Pastel Blue" value="blue" />
-                <Picker.Item label="Pastel Green" value="green" />
-                <Picker.Item label="Pastel Yellow" value="yellow" />
-                <Picker.Item label="Pastel Purple" value="purple" />
-                <Picker.Item label="Pastel Orange" value="orange" />
-              </Picker>
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="datetime"
+              onConfirm={handleReminderConfirm}
+              onCancel={() => setDatePickerVisible(false)}
+              minimumDate={new Date()}
+            />
+          </SafeAreaView>
+        </Modal>
+        <Modal animationType="slide" visible={settingsModalVisible} onRequestClose={() => setSettingsModalVisible(false)}>
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setSettingsModalVisible(false)}>
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Settings</Text>
+              <View />
             </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
-    </SafeAreaView>
+            <View style={styles.modalBody}>
+              <View style={styles.themeToggle}>
+                <Text style={styles.themeLabel}>{mode === 'light' ? '☀️ Light' : '🌙 Dark'}</Text>
+                <Switch
+                  value={mode === 'dark'}
+                  onValueChange={toggleMode}
+                  trackColor={switchTrackColor}
+                  thumbColor={switchThumbColor}
+                />
+              </View>
+              <View style={{ marginTop: 20 }}>
+                <Text style={styles.themeLabel}>Color Palette</Text>
+                <Picker
+                  selectedValue={palette}
+                  onValueChange={(itemValue) => setPalette(itemValue)}
+                  style={{ color: themeColors.primaryText }}
+                >
+                  <Picker.Item label="Default" value="default" />
+                  <Picker.Item label="Pastel Blue" value="blue" />
+                  <Picker.Item label="Pastel Green" value="green" />
+                  <Picker.Item label="Pastel Yellow" value="yellow" />
+                  <Picker.Item label="Pastel Purple" value="purple" />
+                  <Picker.Item label="Pastel Orange" value="orange" />
+                </Picker>
+              </View>
+            </View>
+          </SafeAreaView>
+        </Modal>
+      </View>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <MainApp />
+    </SafeAreaProvider>
   );
 }
