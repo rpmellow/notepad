@@ -24,6 +24,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as Notifications from 'expo-notifications';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -102,8 +103,22 @@ const getGreeting = () => {
     return 'Good Morning';
   } else if (hour >= 12 && hour < 17) {
     return 'Good Afternoon';
-  } else {
+  }else if (hour >= 17 && hour < 19) {
     return 'Good Evening';
+  }else {
+    return 'Hello, Night Owl!';
+  }
+};
+
+// Function to get icon type based on time of day
+const getIconType = () => {
+  const hour = new Date().getHours();
+  if (hour >= 0 && hour < 12) {
+    return 'morning';
+  } else if (hour >= 12 && hour < 17) {
+    return 'afternoon';
+  } else {
+    return 'evening';
   }
 };
 
@@ -993,8 +1008,8 @@ const createStyles = (c) => StyleSheet.create({
   inputTags: {
     backgroundColor: c.secondaryBg,
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     fontSize: 14,
     marginBottom: 12,
     shadowColor: c.shadow,
@@ -1059,10 +1074,11 @@ const createStyles = (c) => StyleSheet.create({
   checklistCheckbox: { marginRight: 10 },
   reminderRow: { marginTop: 12, flexDirection: 'row', alignItems: 'center' },
   reminderBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: c.secondaryBg,
-    paddingHorizontal: 10,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 10,
     shadowColor: c.shadow,
@@ -1214,6 +1230,50 @@ function MainApp() {
     { label: 'Rose Quartz', value: 'rose-quartz' },
     { label: 'Powder Blue', value: 'powder-blue' },
   ];
+
+  const GreetingIcon = ({ type, color }) => {
+    const eyeFill = themeColors.primaryBg;
+    const size = 48;
+    switch (type) {
+      case 'morning':
+        return (
+          <Svg width={size} height={size} viewBox="0 0 24 24">
+            <Circle cx="12" cy="12" r="7" fill={color} />
+            <Path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4 M22.2 7.8l-1.8 0.8 M16.2 1.8l-0.8 1.8 M7.8 1.8l0.8 1.8 M1.8 7.8l1.8 0.8 M1.8 16.2l1.8 -0.8 M7.8 22.2l0.8 -1.8 M16.2 22.2l-0.8 -1.8 M22.2 16.2l-1.8 -0.8" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <Circle cx="9" cy="10" r="1.2" fill={eyeFill} />
+            <Circle cx="15" cy="10" r="1.2" fill={eyeFill} />
+            <Path d="M9 15Q12 18 15 15" stroke={eyeFill} strokeWidth="1.5" strokeLinecap="round" />
+            <Circle cx="8" cy="13" r="1" fill="pink" opacity="0.5" />
+            <Circle cx="16" cy="13" r="1" fill="pink" opacity="0.5" />
+            <Circle cx="8.5" cy="9.5" r="0.5" fill="white" opacity="0.8" />
+            <Circle cx="14.5" cy="9.5" r="0.5" fill="white" opacity="0.8" />
+          </Svg>
+        );
+      case 'afternoon':
+        return (
+          <Svg width={size} height={size} viewBox="0 0 24 24">
+            <Path d="M18 10h-1.26A8 8 0 1 0 9 18h9a5 5 0 0 0 0-10z" fill={color} />
+            <Circle cx="16" cy="9" r="0.5" fill={eyeFill} />
+            <Circle cx="18" cy="9" r="0.5" fill={eyeFill} />
+            <Path d="M16 11Q17 12 18 11" stroke={eyeFill} strokeWidth="1" strokeLinecap="round" />
+          </Svg>
+        );
+      case 'evening':
+        return (
+          <Svg width={size} height={size} viewBox="0 0 24 24">
+            <Path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill={color} />
+            <Circle cx="8" cy="10" r="0.5" fill={eyeFill} />
+            <Circle cx="11" cy="10" r="0.5" fill={eyeFill} />
+            <Path d="M8 12Q9.5 13 11 12" stroke={eyeFill} strokeWidth="1" strokeLinecap="round" />
+            <Circle cx="3" cy="5" r="0.5" fill={color} />
+            <Circle cx="5" cy="18" r="0.5" fill={color} />
+            <Circle cx="18" cy="5" r="0.5" fill={color} />
+          </Svg>
+        );
+      default:
+        return null;
+    }
+  };
 
   useEffect(() => {
     setupNotifications();
@@ -1651,7 +1711,10 @@ function MainApp() {
       />
       <View style={styles.container}>
         <View style={[styles.header, { paddingTop: 24 + insets.top }]}>
-          <Text style={styles.headerTitle}>🌸 {getGreeting()}</Text>
+          <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 8}}>
+            <GreetingIcon type={getIconType()} color={themeColors.headerText} />
+            <Text style={[styles.headerTitle, {marginLeft: 8}]}>{getGreeting()}</Text>
+          </View>
           <View style={styles.headerRow}>
             <TextInput
               placeholder="Search notes..."
@@ -1692,7 +1755,7 @@ function MainApp() {
         </ScrollView>
 
         <View style={[styles.bottomBar, { height: 60 + insets.bottom }]}>
-          <View style={{ flex: 1, height: 60, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }}>
+          <View style={{ flex: 1, height: 60, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'top' }}>
             <TouchableOpacity onPress={() => {
               scrollRef.current?.scrollTo({ animated: true, y: 0 });
             }}>
@@ -1729,28 +1792,30 @@ function MainApp() {
                 onChangeText={(t) => setEditingNote((s) => ({ ...s, title: t }))}
                 returnKeyType="next"
               />
-              <View style={styles.typeToggleContainer}>
-                <TouchableOpacity
-                  style={[styles.typeButton, editingNote && editingNote.type === 'text' ? styles.typeButtonSelected : null]}
-                  onPress={() => setEditingNote((s) => ({ ...s, type: 'text', checklist: [] }))}
-                >
-                  <Text
-                    style={[styles.typeButtonText, editingNote && editingNote.type === 'text' ? styles.typeButtonTextSelected : null]}
+              {editingNote && !editingNote.id && (
+                <View style={styles.typeToggleContainer}>
+                  <TouchableOpacity
+                    style={[styles.typeButton, editingNote && editingNote.type === 'text' ? styles.typeButtonSelected : null]}
+                    onPress={() => setEditingNote((s) => ({ ...s, type: 'text', checklist: [] }))}
                   >
-                    Text Note
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.typeButton, editingNote && editingNote.type === 'todo' ? styles.typeButtonSelected : null]}
-                  onPress={() => setEditingNote((s) => ({ ...s, type: 'todo', body: '' }))}
-                >
-                  <Text
-                    style={[styles.typeButtonText, editingNote && editingNote.type === 'todo' ? styles.typeButtonTextSelected : null]}
+                    <Text
+                      style={[styles.typeButtonText, editingNote && editingNote.type === 'text' ? styles.typeButtonTextSelected : null]}
+                    >
+                      Text Note
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.typeButton, editingNote && editingNote.type === 'todo' ? styles.typeButtonSelected : null]}
+                    onPress={() => setEditingNote((s) => ({ ...s, type: 'todo', body: '' }))}
                   >
-                    To-Do List
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                    <Text
+                      style={[styles.typeButtonText, editingNote && editingNote.type === 'todo' ? styles.typeButtonTextSelected : null]}
+                    >
+                      To-Do List
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
               {editingNote && editingNote.type === 'todo' ? (
                 <>
                   <FlatList
@@ -1786,7 +1851,7 @@ function MainApp() {
                 />
               )}
               <TextInput
-                placeholder="Tags (comma-separated, e.g., WORK, PERSONAL)"
+                placeholder="Tags (comma-separated)"
                 placeholderTextColor={placeholderColor}
                 style={styles.inputTags}
                 value={editingNote ? editingNote.tagsInput : ''}
