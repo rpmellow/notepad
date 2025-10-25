@@ -1380,16 +1380,31 @@ function MainApp() {
                 <Text style={styles.themeLabel}>Color Palette</Text>
                 <FlatList
                   data={palettes}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={[styles.tagButton, palette === item.value ? styles.tagButtonSelected : null]}
-                      onPress={() => setPalette(item.value)}
-                    >
-                      <Text style={[styles.tagText, palette === item.value ? styles.tagTextSelected : null]}>
-                        {item.label}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                  renderItem={({ item }) => {
+                    const pc = colors[`${item.value}-${mode}`];
+                    return (
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: palette === item.value ? pc.accentLight : pc.secondaryBg,
+                          borderRadius: 16,
+                          paddingHorizontal: 14,
+                          paddingVertical: 8,
+                          marginRight: 8,
+                          borderWidth: 1,
+                          borderColor: palette === item.value ? pc.accent : pc.border,
+                        }}
+                        onPress={() => setPalette(item.value)}
+                      >
+                        <Text style={{
+                          fontSize: 14,
+                          color: palette === item.value ? pc.headerText : pc.primaryText,
+                          fontWeight: '600'
+                        }}>
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }}
                   keyExtractor={(item) => item.value}
                   horizontal
                   showsHorizontalScrollIndicator={false}
