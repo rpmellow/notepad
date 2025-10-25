@@ -715,6 +715,7 @@ function MainApp() {
   const [modalVisible, setModalVisible] = useState(false);
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
   const [editingNote, setEditingNote] = useState(null);
   const [mode, setMode] = useState('light');
@@ -934,22 +935,6 @@ function MainApp() {
   const togglePin = (id) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n)));
-  };
-
-  const confirmDelete = (id) => {
-    Alert.alert(
-      'Delete Note',
-      'Are you sure you want to delete this note?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteNote(id),
-        },
-      ],
-      { cancelable: true }
-    );
   };
 
   const deleteNote = async (id) => {
@@ -1436,13 +1421,46 @@ function MainApp() {
                         style={styles.actionModalDeleteButton}
                         onPress={() => {
                           setActionModalVisible(false);
-                          confirmDelete(selectedNote.id);
+                          setDeleteModalVisible(true);
                         }}
                       >
                         <MaterialIcons name="delete" size={24} color="#FF0000" />
                       </TouchableOpacity>
                     </>
                   )}
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+        <Modal
+          visible={deleteModalVisible}
+          onRequestClose={() => setDeleteModalVisible(false)}
+          animationType="fade"
+          transparent={true}
+        >
+          <TouchableWithoutFeedback onPress={() => setDeleteModalVisible(false)}>
+            <View style={styles.actionModalOverlay}>
+              <TouchableWithoutFeedback onPress={() => {}}>
+                <View style={[styles.actionModalContent, { flexDirection: 'column' }]}>
+                  <Text style={styles.actionModalTitle}>Are you sure you want to delete this note?</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+                    <TouchableOpacity
+                      style={styles.actionModalCancelButton}
+                      onPress={() => setDeleteModalVisible(false)}
+                    >
+                      <Text style={styles.actionModalCancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.actionModalDeleteButton}
+                      onPress={() => {
+                        setDeleteModalVisible(false);
+                        deleteNote(selectedNote.id);
+                      }}
+                    >
+                      <Text style={styles.actionModalDeleteButtonText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </TouchableWithoutFeedback>
             </View>
