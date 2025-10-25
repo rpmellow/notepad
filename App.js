@@ -736,6 +736,15 @@ function MainApp() {
   const switchThumbColor = themeColors.thumb;
   const iconColor = themeColors.icon;
 
+  const palettes = [
+    { label: 'Default', value: 'default' },
+    { label: 'Pastel Blue', value: 'blue' },
+    { label: 'Pastel Green', value: 'green' },
+    { label: 'Pastel Yellow', value: 'yellow' },
+    { label: 'Pastel Purple', value: 'purple' },
+    { label: 'Pastel Orange', value: 'orange' },
+  ];
+
   useEffect(() => {
     setupNotifications();
     loadNotes();
@@ -1369,20 +1378,23 @@ function MainApp() {
               </View>
               <View style={{ marginTop: 20 }}>
                 <Text style={styles.themeLabel}>Color Palette</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={palette}
-                    onValueChange={(itemValue) => setPalette(itemValue)}
-                    style={{ color: themeColors.primaryText }}
-                  >
-                    <Picker.Item label="Default" value="default" />
-                    <Picker.Item label="Pastel Blue" value="blue" />
-                    <Picker.Item label="Pastel Green" value="green" />
-                    <Picker.Item label="Pastel Yellow" value="yellow" />
-                    <Picker.Item label="Pastel Purple" value="purple" />
-                    <Picker.Item label="Pastel Orange" value="orange" />
-                  </Picker>
-                </View>
+                <FlatList
+                  data={palettes}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[styles.tagButton, palette === item.value ? styles.tagButtonSelected : null]}
+                      onPress={() => setPalette(item.value)}
+                    >
+                      <Text style={[styles.tagText, palette === item.value ? styles.tagTextSelected : null]}>
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  keyExtractor={(item) => item.value}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.tagsContainer}
+                />
               </View>
             </View>
           </SafeAreaView>
