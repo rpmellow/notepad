@@ -27,6 +27,11 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import MorningSvg from './icons/morning'; // Assuming you create a file with the SVG JSX
 import AfternoonSvg from './icons/afternoon'; // Assuming you create a file with the SVG JSX
 import NightSvg from './icons/night'; // Assuming you create a file with the SVG JSX
+import { InterstitialAd, AdEventType, BannerAd, BannerAdSize, TestIds, useForeground } from 'react-native-google-mobile-ads';
+
+const adUnitIdBanner = __DEV__ ? TestIds.ADAPTIVE_BANNER : 'ca-app-pub-xxxxxxxxxxxxx/yyyyyyyyyyyyyy';
+const adUnitIdInter = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-xxxxxxxxxxxxx/yyyyyyyyyyyyyy';
+
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -977,7 +982,7 @@ const createStyles = (c) => StyleSheet.create({
   modalClose: { fontSize: 22, color: c.modalClose },
   modalTitle: { fontSize: 28, color: c.headerText, fontWeight: '700' },
   modalSave: { fontSize: 16, color: c.accent, fontWeight: '700' },
-  modalBody: { paddingHorizontal: 16, paddingTop: 8 },
+  modalBody: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 100 },
   inputTitle: {
     backgroundColor: c.secondaryBg,
     borderRadius: 12,
@@ -1582,7 +1587,7 @@ const GreetingIcon = ({ type, color }) => {
   const renderItem = ({ item }) => {
     console.log('Rendering note:', item); // Debug log
     return (
-      <TouchableOpacity style={{ marginBottom: 8 }} activeOpacity={0.9} onPress={() => openEditNote(item)}>
+      <TouchableOpacity key={item.id} style={{ marginBottom: 8 }} activeOpacity={0.9} onPress={() => openEditNote(item)}>
         <View style={[styles.card, item.pinned ? styles.cardPinned : null]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle} numberOfLines={2} ellipsizeMode="tail">
@@ -1721,16 +1726,19 @@ const GreetingIcon = ({ type, color }) => {
           ) : (
             <View style={styles.listContainer}>
               <View style={{ flexDirection: 'row' }}>
-                <View style={{ flex: 1, marginRight: 4, paddingBottom: 60 + insets.bottom + 20 }}>
+                <View style={{ flex: 1, marginRight: 4, paddingBottom: 60 + insets.bottom + 120 }}>
                   {leftNotes.map(item => renderItem({item}))}
                 </View>
-                <View style={{ flex: 1, marginLeft: 4, paddingBottom: 60 + insets.bottom + 20 }}>
+                <View style={{ flex: 1, marginLeft: 4, paddingBottom: 60 + insets.bottom + 120 }}>
                   {rightNotes.map(item => renderItem({item}))}
                 </View>
               </View>
             </View>
           )}
         </ScrollView>
+        <View style={{position: 'absolute', bottom: 60 + insets.bottom, left: 0, right: 0, alignItems: 'center'}}>
+          <BannerAd unitId={adUnitIdBanner} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
+        </View>
 
         <View style={[styles.bottomBar, { height: 60 + insets.bottom }]}>
           <View style={{ flex: 1, height: 60, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'top' }}>
@@ -1868,6 +1876,9 @@ const GreetingIcon = ({ type, color }) => {
               onCancel={() => setDatePickerVisible(false)}
               minimumDate={new Date()}
             />
+            <View style={{position: 'absolute', bottom: 0, left: 0, right: 0, alignItems: 'center'}}>
+              <BannerAd unitId={adUnitIdBanner} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
+            </View>
           </SafeAreaView>
         </Modal>
         <Modal animationType="slide" visible={settingsModalVisible} onRequestClose={() => setSettingsModalVisible(false)}>
@@ -1924,6 +1935,9 @@ const GreetingIcon = ({ type, color }) => {
                   style={styles.tagsContainer}
                 />
               </View>
+            </View>
+            <View style={{position: 'absolute', bottom: 0, left: 0, right: 0, alignItems: 'center'}}>
+              <BannerAd unitId={adUnitIdBanner} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
             </View>
           </SafeAreaView>
         </Modal>
