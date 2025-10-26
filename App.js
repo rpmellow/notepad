@@ -27,7 +27,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import MorningSvg from './icons/morning'; // Assuming you create a file with the SVG JSX
 import AfternoonSvg from './icons/afternoon'; // Assuming you create a file with the SVG JSX
 import NightSvg from './icons/night'; // Assuming you create a file with the SVG JSX
-import { InterstitialAd, AdEventType, BannerAd, BannerAdSize, TestIds, useForeground } from 'react-native-google-mobile-ads';
+import mobileAds, { InterstitialAd, AdEventType, BannerAd, BannerAdSize, TestIds, useForeground } from 'react-native-google-mobile-ads';
 
 const adUnitIdBanner = __DEV__ ? TestIds.ADAPTIVE_BANNER : 'ca-app-pub-xxxxxxxxxxxxx/yyyyyyyyyyyyyy';
 const adUnitIdInter = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-xxxxxxxxxxxxx/yyyyyyyyyyyyyy';
@@ -1206,6 +1206,7 @@ function MainApp() {
   const [mode, setMode] = useState('light');
   const [palette, setPalette] = useState('default');
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
+  const [isAdLoaded, setIsAdLoaded] = useState(false);
   const titleRef = useRef(null);
   const scrollRef = useRef(null);
   const insets = useSafeAreaInsets();
@@ -1258,7 +1259,10 @@ const GreetingIcon = ({ type, color }) => {
   }
 };
 
+  const interstitial = useRef(InterstitialAd.createForAdRequest(adUnitIdInter, { requestNonPersonalizedAdsOnly: true }));
+
   useEffect(() => {
+    mobileAds().initialize();
     setupNotifications();
     loadNotes();
     loadMode();
@@ -1290,6 +1294,29 @@ const GreetingIcon = ({ type, color }) => {
     saveMode();
     savePalette();
   }, [mode, palette]);
+
+  useEffect(() => {
+    const unsubscribeLoaded = interstitial.current.addAdEventListener(AdEventType.LOADED, () => {
+      setIsAdLoaded(true);
+    });
+    const unsubscribeClosed = interstitial.current.addAdEventListener(AdEventType.CLOSED, () => {
+      setIsAdLoaded(false);
+      interstitial.current.load();
+    });
+
+    interstitial.current.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeClosed();
+    };
+  }, []);
+
+  const showInterstitial = () => {
+    if (isAdLoaded) {
+      interstitial.current.show();
+    }
+  };
 
   const loadNotes = async () => {
     try {
@@ -1361,6 +1388,7 @@ const GreetingIcon = ({ type, color }) => {
 
   const toggleMode = () => {
     setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+    showInterstitial();
   };
 
   const openNewNote = () => {
@@ -1451,6 +1479,7 @@ const GreetingIcon = ({ type, color }) => {
       };
       setNotes((prev) => [newNote, ...prev]);
     }
+    showInterstitial();
     setModalVisible(false);
   };
 
@@ -1846,7 +1875,7 @@ const GreetingIcon = ({ type, color }) => {
               />
               <View style={styles.pinRow}>
                 <TouchableOpacity
-                  onPress={() => setEditingNote((s) => ({ ...s, pinned: !s.pinned }))}
+                  onPress={() => {setEditingNote((s) => ({ ...s, pinned: !s.pinned })); showInterstitial();}}
                   style={styles.pinBtn}
                 >
                   <Text style={styles.pinEmoji}>{editingNote && editingNote.pinned ? '📌' : '📍'}</Text>
@@ -1917,7 +1946,7 @@ const GreetingIcon = ({ type, color }) => {
                           borderWidth: 1,
                           borderColor: palette === item.value ? pc.accent : pc.border,
                         }}
-                        onPress={() => setPalette(item.value)}
+                        onPress={() => {setPalette(item.value); showInterstitial();}}
                       >
                         <Text style={{
                           fontSize: 14,
@@ -1958,6 +1987,7 @@ const GreetingIcon = ({ type, color }) => {
                         onPress={() => {
                           togglePin(selectedNote.id);
                           setActionModalVisible(false);
+                          showInterstitial();
                         }}
                       >
                         <MaterialIcons name="push-pin" size={24} color={themeColors.headerText} style={selectedNote.pinned ? { transform: [{ rotate: '45deg' }] } : null} />
@@ -2010,6 +2040,7 @@ const GreetingIcon = ({ type, color }) => {
                       onPress={() => {
                         setDeleteModalVisible(false);
                         deleteNote(selectedNote.id);
+                        showInterstitial();
                       }}
                     >
                       <Text style={styles.actionModalDeleteButtonText}>Delete</Text>
