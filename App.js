@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
-  SafeAreaView,
   View,
   Text,
   TextInput,
@@ -23,7 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as Notifications from 'expo-notifications';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import MorningSvg from './icons/morning'; // Assuming you create a file with the SVG JSX
 import AfternoonSvg from './icons/afternoon'; // Assuming you create a file with the SVG JSX
 import NightSvg from './icons/night'; // Assuming you create a file with the SVG JSX
@@ -1271,9 +1270,9 @@ const GreetingIcon = ({ type, color }) => {
     setNotes([
       {
         id: uid(),
-        title: 'Test Note',
-        body: 'This is a test note to ensure cards render.',
-        tags: ['TEST'],
+        title: 'Get Started!',
+        body: 'Edit this to draft your first note. You can add tags, pin important notes, and set reminders to stay organized.',
+        tags: ['GetStarted'],
         pinned: false,
         createdAt: Date.now(),
         updatedAt: Date.now(),
